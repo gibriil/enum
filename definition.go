@@ -41,8 +41,13 @@ func (def definition) Len() int {
 }
 
 func (def definition) ByName(name string) (Value, bool) {
-	member := def.lookup[name]
-	return def.values[member], true
+	index, ok := def.lookup[name]
+
+	if !ok {
+		return Value{}, false
+	}
+
+	return def.values[index], true
 }
 
 func (def definition) ByIndex(index int) (Value, bool) {
