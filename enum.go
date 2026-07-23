@@ -6,17 +6,6 @@ import (
 
 var registry = map[reflect.Type]*definition{}
 
-type enum interface {
-	initializer
-	Index() int
-	Name() string
-	String() string
-	Is(Value) bool
-	MarshalText() ([]byte, error)
-	UnmarshalText(data []byte)
-	Scan(any) error
-}
-
 func Define[T any](schema T) T {
 
 	class := reflect.TypeOf(schema)

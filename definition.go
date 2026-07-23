@@ -4,14 +4,6 @@ import (
 	"reflect"
 )
 
-type collection interface {
-	Values() []Value
-	Names() []string
-	Len() int
-	ByName(string) (Value, bool)
-	ByIndex(int) (Value, bool)
-}
-
 type definition struct {
 	identity reflect.Type
 	name     string

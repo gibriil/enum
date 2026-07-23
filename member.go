@@ -28,10 +28,6 @@ func (e Value) Index() int {
 	return e.index
 }
 
-func (e Value) Is(other Value) bool {
-	return e == other
-}
-
 func (v Value) MarshalText() ([]byte, error) {
 	return []byte(v.def.names[v.index]), nil
 }
