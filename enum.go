@@ -7,7 +7,8 @@ import (
 var registry = map[reflect.Type]*definition{}
 
 type Enum interface {
-	definition() *definition
+	enum()
+
 	Index() int
 	Name() string
 	String() string
@@ -60,6 +61,6 @@ func Define[T any](schema T) T {
 	return schema
 }
 
-func DefinitionOf(member Enum) definition {
-	return *member.definition()
+func DefinitionOf(member Value) definition {
+	return *member.def
 }

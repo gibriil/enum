@@ -1,6 +1,8 @@
 package enum
 
 import (
+	"database/sql"
+	"encoding"
 	"testing"
 )
 
@@ -13,6 +15,13 @@ type colors struct {
 	Green color
 	Blue  color
 }
+
+var (
+	_ Enum                     = color{}
+	_ encoding.TextMarshaler   = color{}
+	_ encoding.TextUnmarshaler = (*color)(nil)
+	_ sql.Scanner              = (*color)(nil)
+)
 
 func TestColorsIndexes(t *testing.T) {
 	var Colors = Define(colors{

@@ -1,6 +1,9 @@
 package enum
 
-import "errors"
+import (
+	"database/sql/driver"
+	"errors"
+)
 
 type Value struct {
 	def   *definition
@@ -16,16 +19,16 @@ func (v *Value) initialize(def *definition, index int) {
 	v.index = index
 }
 
-func (e Value) Name() string {
-	return e.def.names[e.index]
+func (v Value) Name() string {
+	return v.def.names[v.index]
 }
 
-func (e Value) String() string {
-	return e.def.names[e.index]
+func (v Value) String() string {
+	return v.def.names[v.index]
 }
 
-func (e Value) Index() int {
-	return e.index
+func (v Value) Index() int {
+	return v.index
 }
 
 func (v Value) MarshalText() ([]byte, error) {
@@ -81,6 +84,13 @@ func (v *Value) Scan(src any) error {
 	return errors.New("Could not identify enum value in scan")
 }
 
-func (v Value) definition() *definition {
-	return v.def
+func (v Value) Value() (driver.Value, error) {
+	if v.def == nil {
+		return nil, nil
+	}
+	return v.def.names[v.index], nil
 }
+
+// enum marks Value as a valid enum implementation.
+// It intentionally has no behavior; it seals the Enum interface.
+func (v Value) enum() {}
