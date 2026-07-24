@@ -40,31 +40,47 @@ func (v *Value) UnmarshalText(data []byte) error {
 		return errors.New("Enum not found")
 	}
 
-	val, ok := def.ByName(string(data))
+	member, ok := def.ByName(string(data))
 
 	if !ok {
 		return errors.New("Enum not found")
 	}
 
-	*v = val
+	*v = member
 	return nil
 }
 
 func (v *Value) Scan(src any) error {
 	switch data := src.(type) {
 	case []byte:
-		if _, ok := v.def.ByName(string(data)); ok {
+		member, ok := v.def.ByName(string(data))
+
+		if !ok {
 			return nil
 		}
+
+		v = &member
 	case string:
-		if _, ok := v.def.ByName(data); ok {
+		member, ok := v.def.ByName(data)
+
+		if ok {
 			return nil
 		}
+
+		v = &member
 	case int:
-		if _, ok := v.def.ByIndex(data); ok {
+		member, ok := v.def.ByIndex(data)
+
+		if !ok {
 			return nil
 		}
+
+		v = &member
 	default:
 	}
 	return errors.New("Could not identify enum value in scan")
+}
+
+func (v Value) definition() *definition {
+	return v.def
 }
