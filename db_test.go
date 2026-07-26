@@ -10,16 +10,19 @@ import (
 	"testing"
 )
 
+// Declares type shipping as an enum
+type shipping struct {
+	Member
+}
+
+// Ensures event type satisfies Enum interface
 var (
 	_ Enum                   = color{}
 	_ encoding.TextMarshaler = color{}
 	_ driver.Valuer          = (*color)(nil)
 )
 
-type shipping struct {
-	Member
-}
-
+// Carriers list for shipping enums
 type carriers struct {
 	UPS     shipping
 	USPS    shipping
@@ -28,6 +31,7 @@ type carriers struct {
 	Digital shipping
 }
 
+// Test to ensure that driver.Value is the enum name
 func TestCarriers_Value(t *testing.T) {
 	carrier := Define(carriers{
 		UPS:     shipping{},

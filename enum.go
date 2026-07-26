@@ -2,14 +2,17 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// Package enum provides a standard enum interface for creating namespaced enums
 package enum
 
 import (
 	"reflect"
 )
 
+// Registry is a key:value store for reflection caching
 var registry = map[reflect.Type]*definition{}
 
+// Enum is a package sealed interface to identify the enum type
 type Enum interface {
 	enum()
 
@@ -18,6 +21,8 @@ type Enum interface {
 	String() string
 }
 
+// Define registers the struct enum namespace and uses reflection over
+// the struct fields to initialize each enum member
 func Define[T any](schema T) T {
 
 	class := reflect.TypeOf(schema)

@@ -10,22 +10,26 @@ import (
 	"testing"
 )
 
+// Declares type color as an enum
+type color struct {
+	Member
+}
+
+// Ensures color type satisfies Enum interface
 var (
 	_ Enum                   = color{}
 	_ encoding.TextMarshaler = color{}
 	_ driver.Valuer          = (*color)(nil)
 )
 
-type color struct {
-	Member
-}
-
+// Colors list for color enums
 type colors struct {
 	Red   color
 	Green color
 	Blue  color
 }
 
+// Test to ensure that enums in list are properly indexed
 func TestColorsIndexes(t *testing.T) {
 	var Colors = Define(colors{
 		Red:   color{},
@@ -46,6 +50,7 @@ func TestColorsIndexes(t *testing.T) {
 	}
 }
 
+// Test to ensure that member in list properly reflects enum name
 func TestColorsNames(t *testing.T) {
 	var Colors = Define(colors{
 		Red:   color{},
@@ -66,6 +71,7 @@ func TestColorsNames(t *testing.T) {
 	}
 }
 
+// Test to ensure enum members are unique in the list
 func TestColorValuesAreDistinct(t *testing.T) {
 	var Colors = Define(colors{
 		Red:   color{},

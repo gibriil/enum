@@ -63,6 +63,7 @@ func (e Member) MarshalText() ([]byte, error) {
 	return []byte(e.def.names[e.index]), nil
 }
 
+// Value allows the driver to handle the name of the enum member
 func (e Member) Value() (driver.Value, error) {
 	if e.def == nil {
 		return nil, errors.New("Enum not found")
