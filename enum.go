@@ -2,15 +2,76 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package enum provides a standard enum interface for creating namespaced enums
+/*
+Package enum provides a standard enum interface for creating a list of enums. Enums are indexed, iterable, and namespaced.
+
+Flags or flag based enums are still best handled by [Iota]
+
+# Basic Enum
+
+Declare an Enum type by embedding Member in a struct.
+
+	type Color struct {
+		enum.Member
+	}
+
+This enum type can now be used to create an Enum list or namespace.
+
+	type Colors struct {
+		Red Color
+		Green Color
+		Blue Color
+	}
+
+The enums can now be initialized by passing your struct to the Define function.
+
+	Colors := enum.Define(Colors{})
+
+# Enhanced Enum
+
+Because an enum is just a struct, we can build enhanced enums that carry additional data.
+
+	type Vehicle struct {
+		enum.Member
+
+		Tires int
+		Passengers int
+		CarbonPerKilometer int
+	}
+
+These are identical to our basic enum in every other way. Unlike the name and index of enums, the additional data is technically mutable. By convention enhanced enum data should be treated as immutable, though mutation may be desirable in some cases.
+
+Create an Enum list or namespace.
+
+	type Vehicles struct {
+		Car Vehicle
+		Bus Vehicle
+		Bicycle Vehicle
+	}
+
+The additional data can then be populated with their non-zero values when passing the struct declaration to Define.
+
+	Vehicle := enum.Define(Vehicles{
+		Car: Vehicle{
+			Tires: 4,
+			Passengers: 5,
+			CarbonPerKilometer: 400,
+		},
+		Bus: Vehicle{
+			Tires: 6,
+			Passengers: 50,
+			CarbonPerKilometer: 800,
+		},
+		Bicycle: Vehicle{
+			Tires: 2,
+			Passengers: 1,
+			CarbonPerKilometer: 0,
+		},
+	})
+
+Because package enum uses reflection to initialize, it may be advisable to declare your list globally and pass it to Define in the init function
+*/
 package enum
-
-import (
-	"reflect"
-)
-
-// Registry is a key:value store for reflection caching
-var registry = map[reflect.Type]*definition{}
 
 // Enum is a package sealed interface to identify the enum type
 type Enum interface {
@@ -19,57 +80,4 @@ type Enum interface {
 	Index() int
 	Name() string
 	String() string
-}
-
-// Define registers the struct enum namespace and uses reflection over
-// the struct fields to initialize each enum member
-func Define[T any](schema T) T {
-
-	class := reflect.TypeOf(schema)
-
-	if class.Kind() != reflect.Struct {
-		panic("enum.Define requires a struct")
-	}
-
-	def := definition{
-		identity: class,
-		name:     class.Name(),
-		length:   class.NumField(),
-		values:   make([]Member, class.NumField()),
-		names:    make([]string, class.NumField()),
-		lookup:   make(map[string]int),
-		metadata: make([]metadata, class.NumField()),
-	}
-
-	registry[reflect.TypeFor[T]()] = &def
-
-	index := 0
-
-	enum := reflect.ValueOf(&schema).Elem()
-
-	for field, data := range enum.Fields() {
-		member := data.FieldByName("Member")
-
-		embedded := member.Addr().Interface().(initializer)
-		embedded.initialize(&def, index)
-
-		def.values[index] = member.Interface().(Member)
-		def.names[index] = field.Name
-
-		def.lookup[field.Name] = index
-
-		def.metadata[index] = metadata{
-			Name:  field.Name,
-			Field: field,
-			Type:  field.Type,
-		}
-
-		index++
-	}
-
-	return schema
-}
-
-func definitionOf(member Member) definition {
-	return *member.def
 }

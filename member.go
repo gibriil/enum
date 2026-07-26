@@ -13,7 +13,6 @@ import (
 //
 // The zero value of Member is a nil definition signifying the enum is not initialized
 type Member struct {
-	// Has unexported fields.
 	def   *definition
 	index int
 }
@@ -40,7 +39,7 @@ func (e Member) String() string {
 	return e.def.names[e.index]
 }
 
-// Index returns member position in the enum list
+// Index returns the index of member's position in the enum list
 func (e Member) Index() int {
 	return e.index
 }

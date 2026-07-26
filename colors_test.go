@@ -31,11 +31,7 @@ type colors struct {
 
 // Test to ensure that enums in list are properly indexed
 func TestColorsIndexes(t *testing.T) {
-	var Colors = Define(colors{
-		Red:   color{},
-		Green: color{},
-		Blue:  color{},
-	})
+	var Colors = Define(colors{})
 
 	if r := Colors.Red.Index(); r != 0 {
 		t.Errorf("Red.Index(): got %d, want %d", r, 0)
