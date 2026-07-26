@@ -64,37 +64,6 @@ func (e *Member) UnmarshalText(data []byte) error {
 	return nil
 }
 
-func (e *Member) Scan(src any) error {
-	switch data := src.(type) {
-	case []byte:
-		member, ok := e.def.ByName(string(data))
-
-		if !ok {
-			return nil
-		}
-
-		*e = member
-	case string:
-		member, ok := e.def.ByName(data)
-
-		if ok {
-			return nil
-		}
-
-		*e = member
-	case int:
-		member, ok := e.def.ByIndex(data)
-
-		if !ok {
-			return nil
-		}
-
-		*e = member
-	default:
-	}
-	return errors.New("Could not identify enum value in scan")
-}
-
 func (e Member) Value() (driver.Value, error) {
 	if e.def == nil {
 		return nil, errors.New("Enum not found")

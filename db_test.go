@@ -1,7 +1,6 @@
 package enum
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"encoding"
 	"testing"
@@ -11,7 +10,7 @@ var (
 	_ Enum                     = color{}
 	_ encoding.TextMarshaler   = color{}
 	_ encoding.TextUnmarshaler = (*color)(nil)
-	_ sql.Scanner              = (*color)(nil)
+	_ driver.Valuer            = (*color)(nil)
 )
 
 type shipping struct {
@@ -64,38 +63,38 @@ func TestCarriers_Value(t *testing.T) {
 	}
 }
 
-func TestCarriers_Scan(t *testing.T) {
-	carrier := Define(carriers{
-		UPS:     shipping{},
-		USPS:    shipping{},
-		FedEx:   shipping{},
-		DHL:     shipping{},
-		Digital: shipping{},
-	})
+// func TestCarriers_Scan(t *testing.T) {
+// 	carrier := Define(carriers{
+// 		UPS:     shipping{},
+// 		USPS:    shipping{},
+// 		FedEx:   shipping{},
+// 		DHL:     shipping{},
+// 		Digital: shipping{},
+// 	})
 
-	tests := []struct {
-		Name    string
-		Input   any
-		Want    shipping
-		wantErr bool
-	}{
-		{"scan bytes", []byte("UPS"), carrier.UPS, false},
-		{"scan int", 3, carrier.DHL, false},
-		{"scan nil", nil, shipping{}, true},
-		{"scan invalid type", "Amazon", shipping{}, true},
-	}
+// 	tests := []struct {
+// 		Name    string
+// 		Input   any
+// 		Want    shipping
+// 		wantErr bool
+// 	}{
+// 		{"scan bytes", []byte("UPS"), carrier.UPS, false},
+// 		{"scan int", 3, carrier.DHL, false},
+// 		{"scan nil", nil, shipping{}, true},
+// 		{"scan invalid type", "Amazon", shipping{}, true},
+// 	}
 
-	for _, test := range tests {
-		t.Run(test.Name, func(t *testing.T) {
-			var carrier shipping
-			err := carrier.Scan(test.Input)
-			if (err != nil) != test.wantErr {
-				t.Errorf("Scan() error = %v, wantErr %v", err, test.wantErr)
-				return
-			}
-			if carrier != test.Want {
-				t.Errorf("Scan(): got %v, want %v", carrier, test.Want)
-			}
-		})
-	}
-}
+// 	for _, test := range tests {
+// 		t.Run(test.Name, func(t *testing.T) {
+// 			var carrier shipping
+// 			err := carrier.Scan(test.Input)
+// 			if (err != nil) != test.wantErr {
+// 				t.Errorf("Scan() error = %v, wantErr %v", err, test.wantErr)
+// 				return
+// 			}
+// 			if carrier != test.Want {
+// 				t.Errorf("Scan(): got %v, want %v", carrier, test.Want)
+// 			}
+// 		})
+// 	}
+// }

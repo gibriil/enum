@@ -1,7 +1,7 @@
 package enum
 
 import (
-	"database/sql"
+	"database/sql/driver"
 	"encoding"
 	"testing"
 )
@@ -10,7 +10,7 @@ var (
 	_ Enum                     = color{}
 	_ encoding.TextMarshaler   = color{}
 	_ encoding.TextUnmarshaler = (*color)(nil)
-	_ sql.Scanner              = (*color)(nil)
+	_ driver.Valuer            = (*color)(nil)
 )
 
 type color struct {
