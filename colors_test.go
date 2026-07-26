@@ -11,10 +11,9 @@ import (
 )
 
 var (
-	_ Enum                     = color{}
-	_ encoding.TextMarshaler   = color{}
-	_ encoding.TextUnmarshaler = (*color)(nil)
-	_ driver.Valuer            = (*color)(nil)
+	_ Enum                   = color{}
+	_ encoding.TextMarshaler = color{}
+	_ driver.Valuer          = (*color)(nil)
 )
 
 type color struct {
