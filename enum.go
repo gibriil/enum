@@ -26,7 +26,7 @@ func Define[T any](schema T) T {
 		identity: class,
 		name:     class.Name(),
 		length:   class.NumField(),
-		values:   make([]Value, class.NumField()),
+		values:   make([]Member, class.NumField()),
 		names:    make([]string, class.NumField()),
 		lookup:   make(map[string]int),
 		metadata: make([]metadata, class.NumField()),
@@ -39,12 +39,12 @@ func Define[T any](schema T) T {
 	enum := reflect.ValueOf(&schema).Elem()
 
 	for field, data := range enum.Fields() {
-		member := data.FieldByName("Value")
+		member := data.FieldByName("Member")
 
 		embedded := member.Addr().Interface().(initializer)
 		embedded.initialize(&def, index)
 
-		def.values[index] = member.Interface().(Value)
+		def.values[index] = member.Interface().(Member)
 		def.names[index] = field.Name
 
 		def.lookup[field.Name] = index
@@ -61,6 +61,6 @@ func Define[T any](schema T) T {
 	return schema
 }
 
-func DefinitionOf(member Value) definition {
+func definitionOf(member Member) definition {
 	return *member.def
 }

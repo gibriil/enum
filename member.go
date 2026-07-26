@@ -5,7 +5,7 @@ import (
 	"errors"
 )
 
-type Value struct {
+type Member struct {
 	def   *definition
 	index int
 }
@@ -14,30 +14,41 @@ type initializer interface {
 	initialize(*definition, int)
 }
 
-func (v *Value) initialize(def *definition, index int) {
-	v.def = def
-	v.index = index
+func (e *Member) initialize(def *definition, index int) {
+	e.def = def
+	e.index = index
 }
 
-func (v Value) Name() string {
-	return v.def.names[v.index]
+func (e Member) Name() string {
+	return e.def.names[e.index]
 }
 
-func (v Value) String() string {
-	return v.def.names[v.index]
+func (e Member) String() string {
+	return e.def.names[e.index]
 }
 
-func (v Value) Index() int {
-	return v.index
+func (e Member) Index() int {
+	return e.index
 }
 
-func (v Value) MarshalText() ([]byte, error) {
-	return []byte(v.def.names[v.index]), nil
+func (e Member) IsZero() bool {
+	return e.def == nil
 }
 
-func (v *Value) UnmarshalText(data []byte) error {
+func (e Member) Valid() bool {
+	return !e.IsZero()
+}
 
-	def, ok := registry[v.def.identity]
+func (e Member) MarshalText() ([]byte, error) {
+	if e.IsZero() {
+		return []byte("nil"), errors.New("Enum is Zero Value")
+	}
+	return []byte(e.def.names[e.index]), nil
+}
+
+func (e *Member) UnmarshalText(data []byte) error {
+
+	def, ok := registry[e.def.identity]
 
 	if !ok {
 		return errors.New("Enum not found")
@@ -49,48 +60,48 @@ func (v *Value) UnmarshalText(data []byte) error {
 		return errors.New("Enum not found")
 	}
 
-	*v = member
+	*e = member
 	return nil
 }
 
-func (v *Value) Scan(src any) error {
+func (e *Member) Scan(src any) error {
 	switch data := src.(type) {
 	case []byte:
-		member, ok := v.def.ByName(string(data))
+		member, ok := e.def.ByName(string(data))
 
 		if !ok {
 			return nil
 		}
 
-		v = &member
+		*e = member
 	case string:
-		member, ok := v.def.ByName(data)
+		member, ok := e.def.ByName(data)
 
 		if ok {
 			return nil
 		}
 
-		v = &member
+		*e = member
 	case int:
-		member, ok := v.def.ByIndex(data)
+		member, ok := e.def.ByIndex(data)
 
 		if !ok {
 			return nil
 		}
 
-		v = &member
+		*e = member
 	default:
 	}
 	return errors.New("Could not identify enum value in scan")
 }
 
-func (v Value) Value() (driver.Value, error) {
-	if v.def == nil {
-		return nil, nil
+func (e Member) Value() (driver.Value, error) {
+	if e.def == nil {
+		return nil, errors.New("Enum not found")
 	}
-	return v.def.names[v.index], nil
+	return e.def.names[e.index], nil
 }
 
 // enum marks Value as a valid enum implementation.
 // It intentionally has no behavior; it seals the Enum interface.
-func (v Value) enum() {}
+func (e Member) enum() {}

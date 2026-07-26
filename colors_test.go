@@ -6,8 +6,15 @@ import (
 	"testing"
 )
 
+var (
+	_ Enum                     = color{}
+	_ encoding.TextMarshaler   = color{}
+	_ encoding.TextUnmarshaler = (*color)(nil)
+	_ sql.Scanner              = (*color)(nil)
+)
+
 type color struct {
-	Value
+	Member
 }
 
 type colors struct {
@@ -15,13 +22,6 @@ type colors struct {
 	Green color
 	Blue  color
 }
-
-var (
-	_ Enum                     = color{}
-	_ encoding.TextMarshaler   = color{}
-	_ encoding.TextUnmarshaler = (*color)(nil)
-	_ sql.Scanner              = (*color)(nil)
-)
 
 func TestColorsIndexes(t *testing.T) {
 	var Colors = Define(colors{
@@ -71,14 +71,14 @@ func TestColorValuesAreDistinct(t *testing.T) {
 	})
 
 	if Colors.Red == Colors.Green {
-		t.Fatal("Red and Green should not be equal")
+		t.Error("Red and Green should not be equal")
 	}
 
 	if Colors.Red == Colors.Blue {
-		t.Fatal("Red and Blue should not be equal")
+		t.Error("Red and Blue should not be equal")
 	}
 
 	if Colors.Green == Colors.Blue {
-		t.Fatal("Green and Blue should not be equal")
+		t.Error("Green and Blue should not be equal")
 	}
 }
