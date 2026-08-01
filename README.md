@@ -27,4 +27,4 @@ go get github.com/gibriil/enum@latest
 
 ## API Documentation
 
-See: <https://pkg.go.dev/gibriil/enum>
+See: <https://pkg.go.dev/github.com/gibriil/enum>
