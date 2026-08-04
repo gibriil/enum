@@ -46,6 +46,9 @@ func (def definition) ByName(name string) (Member, bool) {
 
 // ByIndex returns the enum member by the index os its position in the enum list
 func (def definition) ByIndex(index int) (Member, bool) {
+	if index < 0 || index > def.Len() {
+		return Member{}, false
+	}
 	return def.values[index], true
 }
 
@@ -86,3 +89,7 @@ func (def definition) Entries() iter.Seq2[string, Member] {
 		}
 	}
 }
+
+// namespace marks Namespace as a valid enum Namespace implementation.
+// It intentionally has no behavior; it seals the Namespace interface.
+func (e definition) namespace() {}

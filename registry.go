@@ -1,6 +1,9 @@
 package enum
 
-import "reflect"
+import (
+	"iter"
+	"reflect"
+)
 
 // Registry is a key:value store for reflection caching
 var registry = map[reflect.Type]*definition{}
@@ -54,6 +57,14 @@ func Define[T any](schema T) T {
 	return schema
 }
 
-func definitionOf(member Member) definition {
-	return *member.def
+type Namespace[T any] interface {
+	namespace()
+
+	Len() int
+	ByName(name string) (Member, bool)
+	ByIndex(index int) (Member, bool)
+	Values() []Member
+	Names() []string
+	All() iter.Seq[Member]
+	Entries() iter.Seq2[string, Member]
 }

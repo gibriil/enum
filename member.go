@@ -73,3 +73,7 @@ func (e Member) Value() (driver.Value, error) {
 // enum marks Member as a valid enum implementation.
 // It intentionally has no behavior; it seals the Enum interface.
 func (e Member) enum() {}
+
+func (e Member) Namespace() *definition {
+	return e.def
+}
