@@ -11,7 +11,7 @@ import (
 
 // ByName returns the enum member by name.
 // Member zero value with false is returned if member name does not return initialized enum member
-func ByName[T Namespace[T]](namespace T, name string) (Member, bool) {
+func ByName[T any](namespace T, name string) (Member, bool) {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -22,7 +22,7 @@ func ByName[T Namespace[T]](namespace T, name string) (Member, bool) {
 }
 
 // ByIndex returns the enum member by the index os its position in the enum list
-func ByIndex[T Namespace[T]](namespace T, index int) (Member, bool) {
+func ByIndex[T any](namespace T, index int) (Member, bool) {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -35,7 +35,7 @@ func ByIndex[T Namespace[T]](namespace T, index int) (Member, bool) {
 // Values returns a defensive copy of the definition's slice of Values
 //
 // an empty Member slice is returned for any internal error
-func Values[T Namespace[T]](namespace T) []Member {
+func Values[T any](namespace T) []Member {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -48,7 +48,7 @@ func Values[T Namespace[T]](namespace T) []Member {
 // Values returns a defensive copy of the definition's slice of Names
 //
 // an empty string slice is returned for any internal error
-func Names[T Namespace[T]](namespace T) []string {
+func Names[T any](namespace T) []string {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -62,7 +62,7 @@ func Names[T Namespace[T]](namespace T) []string {
 // Yields Member
 //
 // No yield for any internal error
-func All[T Namespace[T]](namespace T) iter.Seq[Member] {
+func All[T any](namespace T) iter.Seq[Member] {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -76,7 +76,7 @@ func All[T Namespace[T]](namespace T) iter.Seq[Member] {
 // Yields Member name and associated Member
 //
 // No yield for any internal error
-func Entries[T Namespace[T]](namespace T) iter.Seq2[string, Member] {
+func Entries[T any](namespace T) iter.Seq2[string, Member] {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
