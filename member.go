@@ -6,7 +6,6 @@ package enum
 
 import (
 	"database/sql/driver"
-	"errors"
 )
 
 // Member is embedded in a struct to mark the struct type as an enum
@@ -57,7 +56,7 @@ func (e Member) Valid() bool {
 // MarshalText marshals the enum member name
 func (e Member) MarshalText() ([]byte, error) {
 	if e.IsZero() {
-		return []byte("nil"), errors.New("Enum is Zero Value")
+		return nil, ErrUninitialized
 	}
 	return []byte(e.def.names[e.index]), nil
 }
@@ -65,7 +64,7 @@ func (e Member) MarshalText() ([]byte, error) {
 // Value allows the driver to handle the name of the enum member
 func (e Member) Value() (driver.Value, error) {
 	if e.def == nil {
-		return nil, errors.New("Enum not found")
+		return nil, ErrEnumNotFound
 	}
 	return e.def.names[e.index], nil
 }

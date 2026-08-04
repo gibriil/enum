@@ -73,6 +73,8 @@ Because package enum uses reflection to initialize, it may be advisable to decla
 */
 package enum
 
+import "errors"
+
 // Enum is a package sealed interface to identify the enum type
 type Enum interface {
 	enum()
@@ -81,3 +83,8 @@ type Enum interface {
 	Name() string
 	String() string
 }
+
+var (
+	ErrUninitialized = errors.New("Enum is Zero Value")
+	ErrEnumNotFound  = errors.New("Enum not found")
+)
