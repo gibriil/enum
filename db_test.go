@@ -33,6 +33,7 @@ type carriers struct {
 
 // Test to ensure that driver.Value is the enum name
 func TestCarriers_Value(t *testing.T) {
+	clear(registry)
 	carrier := Define(carriers{
 		UPS:     shipping{},
 		USPS:    shipping{},

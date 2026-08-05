@@ -65,6 +65,7 @@ var windowEvent = windowEvents{
 // Test to ensure that enum at position 0 of one namespace is not equal
 // an enum at position 0 of another namespace
 func TestEventNamespacesMembersAreDistinct(t *testing.T) {
+	clear(registry)
 	windowEvent = Define(windowEvent)
 	keyboardEvent = Define(keyboardEvent)
 

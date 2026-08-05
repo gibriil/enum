@@ -57,32 +57,28 @@ func Define[T any](schema T) T {
 
 	registry[class] = &def
 
-	index := 0
+	for i := 0; i < class.NumField(); i++ {
+		field := class.Field(i)
 
-	enum := reflect.ValueOf(&schema).Elem()
-
-	for field, data := range enum.Fields() {
-		member := data.FieldByName("Member")
-
-		if !member.IsValid() {
+		if !field.Type.Implements(reflect.TypeFor[Enum]()) {
 			continue
 		}
 
+		member := reflect.ValueOf(&schema).Elem().FieldByIndex(field.Index)
+
 		embedded := member.Addr().Interface().(initializer)
-		embedded.initialize(&def, index)
+		embedded.initialize(&def, i)
 
-		def.values[index] = member.Interface().(Member)
-		def.names[index] = field.Name
+		def.values[i] = member.Addr().Interface().(Enum)
+		def.names[i] = field.Name
 
-		def.lookup[field.Name] = index
+		def.lookup[field.Name] = i
 
-		def.metadata[index] = metadata{
+		def.metadata[i] = metadata{
 			Name:  field.Name,
 			Field: field,
 			Type:  field.Type,
 		}
-
-		index++
 	}
 
 	return schema
