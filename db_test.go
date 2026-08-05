@@ -17,9 +17,9 @@ type shipping struct {
 
 // Ensures event type satisfies Enum interface
 var (
-	_ Enum                   = color{}
-	_ encoding.TextMarshaler = color{}
-	_ driver.Valuer          = (*color)(nil)
+	_ Enum                   = shipping{}
+	_ encoding.TextMarshaler = shipping{}
+	_ driver.Valuer          = (*shipping)(nil)
 )
 
 // Carriers list for shipping enums

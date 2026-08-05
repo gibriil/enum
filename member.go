@@ -30,11 +30,17 @@ func (e *Member) initialize(def *definition, index int) {
 
 // Name returns the enum member name
 func (e Member) Name() string {
+	if e.IsZero() {
+		return ""
+	}
 	return e.def.names[e.index]
 }
 
 // String returns the enum member name
 func (e Member) String() string {
+	if e.IsZero() {
+		return ""
+	}
 	return e.def.names[e.index]
 }
 
@@ -63,8 +69,8 @@ func (e Member) MarshalText() ([]byte, error) {
 
 // Value allows the driver to handle the name of the enum member
 func (e Member) Value() (driver.Value, error) {
-	if e.def == nil {
-		return nil, ErrEnumNotFound
+	if e.IsZero() {
+		return nil, ErrUninitialized
 	}
 	return e.def.names[e.index], nil
 }
@@ -73,6 +79,9 @@ func (e Member) Value() (driver.Value, error) {
 // It intentionally has no behavior; it seals the Enum interface.
 func (e Member) enum() {}
 
-func (e Member) Namespace() *definition {
-	return e.def
+func (e Member) Namespace() Namespace {
+	if e.IsZero() {
+		return Namespace{}
+	}
+	return Namespace{definition: e.def}
 }

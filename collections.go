@@ -11,7 +11,7 @@ import (
 
 // ByName returns the enum member by name.
 // Member zero value with false is returned if member name does not return initialized enum member
-func ByName[T any](namespace T, name string) (Member, bool) {
+func ByName[T any](namespace T, name string) (Enum, bool) {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -22,7 +22,7 @@ func ByName[T any](namespace T, name string) (Member, bool) {
 }
 
 // ByIndex returns the enum member by the index os its position in the enum list
-func ByIndex[T any](namespace T, index int) (Member, bool) {
+func ByIndex[T any](namespace T, index int) (Enum, bool) {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
@@ -35,11 +35,11 @@ func ByIndex[T any](namespace T, index int) (Member, bool) {
 // Values returns a defensive copy of the definition's slice of Values
 //
 // an empty Member slice is returned for any internal error
-func Values[T any](namespace T) []Member {
+func Values[T any](namespace T) []Enum {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
-		return []Member{}
+		return []Enum{}
 	}
 
 	return def.Values()
@@ -62,11 +62,11 @@ func Names[T any](namespace T) []string {
 // Yields Member
 //
 // No yield for any internal error
-func All[T any](namespace T) iter.Seq[Member] {
+func All[T any](namespace T) iter.Seq[Enum] {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
-		return func(yield func(Member) bool) {}
+		return func(yield func(Enum) bool) {}
 	}
 
 	return def.All()
@@ -76,11 +76,11 @@ func All[T any](namespace T) iter.Seq[Member] {
 // Yields Member name and associated Member
 //
 // No yield for any internal error
-func Entries[T any](namespace T) iter.Seq2[string, Member] {
+func Entries[T any](namespace T) iter.Seq2[string, Enum] {
 	def, ok := registry[reflect.TypeFor[T]()]
 
 	if !ok {
-		return func(yield func(string, Member) bool) {}
+		return func(yield func(string, Enum) bool) {}
 	}
 
 	return def.Entries()

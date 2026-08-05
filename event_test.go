@@ -84,12 +84,12 @@ func TestEventNamespacesIdentitiesAreDistinct(t *testing.T) {
 	windowEvent = Define(windowEvent)
 	keyboardEvent = Define(keyboardEvent)
 
-	if windowEvent.Move.def.identity == keyboardEvent.Enter.def.identity {
-		t.Errorf("windowEvent and keyboard should not have the same type: got %s", windowEvent.Move.def.identity)
+	if windowEvent.Move.Namespace().identity == keyboardEvent.Enter.Namespace().identity {
+		t.Errorf("windowEvent and keyboard should not have the same type: got %s", windowEvent.Move.Namespace().identity)
 	}
 
-	if windowEvent.Move.def.name == keyboardEvent.Enter.def.name {
-		t.Errorf("windowEvent and keyboard should not have the same name: got %s", windowEvent.Move.def.name)
+	if windowEvent.Move.Namespace().name == keyboardEvent.Enter.Namespace().name {
+		t.Errorf("windowEvent and keyboard should not have the same name: got %s", windowEvent.Move.Namespace().name)
 	}
 
 	if len(registry) != 2 {
