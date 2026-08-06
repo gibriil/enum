@@ -146,11 +146,62 @@ func TestCollectionsByName(t *testing.T) {
 }
 
 func TestCollectionsByIndex(t *testing.T) {
+	tests := []struct {
+		Name   string
+		Index  int
+		Want   role
+		wantOk bool
+	}{
+		{"User", 0, accessControl.User, true},
+		{"Guest", 1, accessControl.Guest, true},
+		{"Admin", 2, accessControl.Admin, true},
+		{"Manager", 3, accessControl.Manager, true},
+		{"Viewer", 4, accessControl.Viewer, true},
+		{"Missing", -1, role{}, false},
+	}
 
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got, ok := enum.ByIndex(accessControl, test.Index)
+			if ok != test.wantOk {
+				t.Fatalf("ByIndex(%d): ok=%v, want %v", test.Index, ok, test.wantOk)
+			}
+			if !ok {
+				return
+			}
+			if !enum.Equal(got, test.Want) {
+				t.Errorf("ByIndex(%d): got %v, want %v", test.Index, got, test.Want)
+			}
+			if got.Index() != test.Index {
+				t.Errorf("Index() = %q, want %d", got.Name(), test.Index)
+			}
+		})
+	}
 }
 
 func TestCollectionsByValues(t *testing.T) {
+	tests := []struct {
+		Name   string
+		Want   role
+		wantOk bool
+	}{
+		{"User", accessControl.User, true},
+		{"Guest", accessControl.Guest, true},
+		{"Admin", accessControl.Admin, true},
+		{"Manager", accessControl.Manager, true},
+		{"Viewer", accessControl.Viewer, true},
+	}
 
+	members := enum.Values(accessControl)
+
+	if len(members) != len(tests) {
+		t.Fatalf("unexpected Values length")
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+		})
+	}
 }
 
 func TestCollectionsNames(t *testing.T) {
