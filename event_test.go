@@ -65,15 +65,15 @@ var windowEvent = windowEvents{
 // Test to ensure that enum at position 0 of one namespace is not equal
 // an enum at position 0 of another namespace
 func TestEventNamespacesMembersAreDistinct(t *testing.T) {
-	clear(registry)
+	clearRegistry()
 	windowEvent = Define(windowEvent)
 	keyboardEvent = Define(keyboardEvent)
 
-	if windowEvent.Move == keyboardEvent.Enter {
+	if windowEvent.Move.Member == keyboardEvent.Enter.Member {
 		t.Error("windowEvent should not equal keyboardEvent")
 	}
 
-	if windowEvent.Focus == keyboardEvent.Focus {
+	if windowEvent.Focus.Member == keyboardEvent.Focus.Member {
 		t.Error("The same member names and index should not have equality across namespaces")
 	}
 }
@@ -81,7 +81,7 @@ func TestEventNamespacesMembersAreDistinct(t *testing.T) {
 // Test to ensure that definitions are not equal between two namespaces.
 // Test to ensure internal registry only contains namespaces defined in init
 func TestEventNamespacesIdentitiesAreDistinct(t *testing.T) {
-	clear(registry)
+	clearRegistry()
 	windowEvent = Define(windowEvent)
 	keyboardEvent = Define(keyboardEvent)
 
@@ -93,7 +93,7 @@ func TestEventNamespacesIdentitiesAreDistinct(t *testing.T) {
 		t.Errorf("windowEvent and keyboard should not have the same name: got %s", windowEvent.Move.Namespace().name)
 	}
 
-	if len(registry) != 2 {
-		t.Errorf("Registry length does not matched number of defined Enums: got %d, want %d", len(registry), 2)
+	if len(registry.data) != 2 {
+		t.Errorf("Registry length does not matched number of defined Enums: got %d, want %d", len(registry.data), 2)
 	}
 }

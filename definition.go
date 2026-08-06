@@ -8,10 +8,22 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"sync"
 )
 
 // Registry is a key:value store for reflection caching
-var registry = map[reflect.Type]*definition{}
+var registry = struct {
+	sync.RWMutex
+	data map[reflect.Type]*definition
+}{
+	data: map[reflect.Type]*definition{},
+}
+
+func clearRegistry() {
+	registry.Lock()
+	defer registry.Unlock()
+	clear(registry.data)
+}
 
 // Definition holds the namespace information for the enum list.
 type definition struct {
@@ -41,21 +53,18 @@ func Define[T any](schema T) T {
 		panic("enum.Define requires a struct")
 	}
 
-	if _, exists := registry[class]; exists {
-		panic(fmt.Sprintf("Enum has already been defined for %s", class))
+	if _, exists := registry.data[class]; exists {
+		panic(fmt.Sprintf("enum has already been defined for %s", class))
 	}
 
 	def := definition{
 		identity: class,
 		name:     class.Name(),
-		length:   class.NumField(),
-		values:   make([]Enum, class.NumField()),
-		names:    make([]string, class.NumField()),
-		lookup:   make(map[string]int),
-		metadata: make([]metadata, class.NumField()),
+		values:   []Enum{},
+		names:    []string{},
+		lookup:   map[string]int{},
+		metadata: []metadata{},
 	}
-
-	registry[class] = &def
 
 	for i := 0; i < class.NumField(); i++ {
 		field := class.Field(i)
@@ -69,17 +78,23 @@ func Define[T any](schema T) T {
 		embedded := member.Addr().Interface().(initializer)
 		embedded.initialize(&def, i)
 
-		def.values[i] = member.Addr().Interface().(Enum)
-		def.names[i] = field.Name
+		def.values = append(def.values, member.Addr().Interface().(Enum))
+		def.names = append(def.names, field.Name)
 
 		def.lookup[field.Name] = i
 
-		def.metadata[i] = metadata{
+		def.metadata = append(def.metadata, metadata{
 			Name:  field.Name,
 			Field: field,
 			Type:  field.Type,
-		}
+		})
 	}
+
+	def.length = len(def.values)
+
+	registry.Lock()
+	registry.data[class] = &def
+	registry.Unlock()
 
 	return schema
 }
@@ -103,7 +118,7 @@ func (def *definition) ByName(name string) (Enum, bool) {
 
 // ByIndex returns the enum member by the index os its position in the enum list
 func (def *definition) ByIndex(index int) (Enum, bool) {
-	if index < 0 || index > def.Len() {
+	if index < 0 || index >= def.Len() {
 		return Member{}, false
 	}
 	return def.values[index], true

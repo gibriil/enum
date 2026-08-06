@@ -49,7 +49,7 @@ var vehicles = struct {
 }
 
 func TestEnhancedEnumVehicleTires(t *testing.T) {
-	clear(registry)
+	clearRegistry()
 	Vehicle := Define(vehicles)
 
 	tireTests := []struct {
@@ -76,7 +76,7 @@ func TestEnhancedEnumVehicleTires(t *testing.T) {
 }
 
 func TestEnhancedEnumVehiclePassengers(t *testing.T) {
-	clear(registry)
+	clearRegistry()
 	Vehicle := Define(vehicles)
 
 	tireTests := []struct {
@@ -103,7 +103,7 @@ func TestEnhancedEnumVehiclePassengers(t *testing.T) {
 }
 
 func TestEnhancedEnumVehicleCarbonPerKilometer(t *testing.T) {
-	clear(registry)
+	clearRegistry()
 	Vehicle := Define(vehicles)
 
 	tireTests := []struct {

@@ -10,13 +10,15 @@ import (
 )
 
 // func DefinitionOf[T any](namespace T) Namespace[T] {
-// 	return registry[reflect.TypeFor[T]()]
+// 	return registry.data[reflect.TypeFor[T]()]
 // }
 
 // ByName returns the enum member by name.
 // Member zero value with false is returned if member name does not return initialized enum member
 func ByName[T any](namespace T, name string) (Enum, bool) {
-	def, ok := registry[reflect.TypeFor[T]()]
+	registry.RLock()
+	defer registry.RUnlock()
+	def, ok := registry.data[reflect.TypeFor[T]()]
 
 	if !ok {
 		return Member{}, false
@@ -27,7 +29,9 @@ func ByName[T any](namespace T, name string) (Enum, bool) {
 
 // ByIndex returns the enum member by the index os its position in the enum list
 func ByIndex[T any](namespace T, index int) (Enum, bool) {
-	def, ok := registry[reflect.TypeFor[T]()]
+	registry.RLock()
+	defer registry.RUnlock()
+	def, ok := registry.data[reflect.TypeFor[T]()]
 
 	if !ok {
 		return Member{}, false
@@ -40,7 +44,9 @@ func ByIndex[T any](namespace T, index int) (Enum, bool) {
 //
 // an empty Member slice is returned for any internal error
 func Values[T any](namespace T) []Enum {
-	def, ok := registry[reflect.TypeFor[T]()]
+	registry.RLock()
+	defer registry.RUnlock()
+	def, ok := registry.data[reflect.TypeFor[T]()]
 
 	if !ok {
 		return []Enum{}
@@ -53,7 +59,9 @@ func Values[T any](namespace T) []Enum {
 //
 // an empty string slice is returned for any internal error
 func Names[T any](namespace T) []string {
-	def, ok := registry[reflect.TypeFor[T]()]
+	registry.RLock()
+	defer registry.RUnlock()
+	def, ok := registry.data[reflect.TypeFor[T]()]
 
 	if !ok {
 		return []string{}
@@ -67,7 +75,9 @@ func Names[T any](namespace T) []string {
 //
 // No yield for any internal error
 func All[T any](namespace T) iter.Seq[Enum] {
-	def, ok := registry[reflect.TypeFor[T]()]
+	registry.RLock()
+	defer registry.RUnlock()
+	def, ok := registry.data[reflect.TypeFor[T]()]
 
 	if !ok {
 		return func(yield func(Enum) bool) {}
@@ -81,7 +91,9 @@ func All[T any](namespace T) iter.Seq[Enum] {
 //
 // No yield for any internal error
 func Entries[T any](namespace T) iter.Seq2[string, Enum] {
-	def, ok := registry[reflect.TypeFor[T]()]
+	registry.RLock()
+	defer registry.RUnlock()
+	def, ok := registry.data[reflect.TypeFor[T]()]
 
 	if !ok {
 		return func(yield func(string, Enum) bool) {}
