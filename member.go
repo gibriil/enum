@@ -28,6 +28,11 @@ func (e *Member) initialize(def *definition, index int) {
 	e.index = index
 }
 
+// identity returns the comparable for enum equality checks
+func (e Member) identity() Member {
+	return e
+}
+
 // Name returns the enum member name
 func (e Member) Name() string {
 	if e.IsZero() {

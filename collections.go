@@ -13,6 +13,18 @@ import (
 // 	return registry.data[reflect.TypeFor[T]()]
 // }
 
+func Equal(a, b Enum) bool {
+	if !a.Valid() || !b.Valid() {
+		return false
+	}
+
+	if !a.Valid() && !b.Valid() {
+		return true
+	}
+
+	return a.identity() == b.identity()
+}
+
 // ByName returns the enum member by name.
 // Member zero value with false is returned if member name does not return initialized enum member
 func ByName[T any](namespace T, name string) (Enum, bool) {

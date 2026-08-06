@@ -84,10 +84,13 @@ var (
 // Enum is a package sealed interface to identify the enum type
 type Enum interface {
 	enum()
+	identity() Member
 
 	Index() int
 	Name() string
 	String() string
+	IsZero() bool
+	Valid() bool
 }
 
 type Namespace struct {
