@@ -26,11 +26,13 @@ var (
 	_ driver.Valuer          = (*vehicle)(nil)
 )
 
-var vehicles = struct {
+type vehicles struct {
 	Car     vehicle
 	Bus     vehicle
 	Bicycle vehicle
-}{
+}
+
+var transportation = vehicles{
 	Car: vehicle{
 		Tires:              4,
 		Passengers:         5,
@@ -49,8 +51,8 @@ var vehicles = struct {
 }
 
 func TestEnhancedEnumVehicleTires(t *testing.T) {
-	clearRegistry()
-	Vehicle := Define(vehicles)
+	clearRegisteredNamespace[vehicles]()
+	Vehicle := Define(transportation)
 
 	tireTests := []struct {
 		Name    string
@@ -76,8 +78,8 @@ func TestEnhancedEnumVehicleTires(t *testing.T) {
 }
 
 func TestEnhancedEnumVehiclePassengers(t *testing.T) {
-	clearRegistry()
-	Vehicle := Define(vehicles)
+	clearRegisteredNamespace[vehicles]()
+	Vehicle := Define(transportation)
 
 	tireTests := []struct {
 		Name    string
@@ -103,8 +105,8 @@ func TestEnhancedEnumVehiclePassengers(t *testing.T) {
 }
 
 func TestEnhancedEnumVehicleCarbonPerKilometer(t *testing.T) {
-	clearRegistry()
-	Vehicle := Define(vehicles)
+	clearRegisteredNamespace[vehicles]()
+	Vehicle := Define(transportation)
 
 	tireTests := []struct {
 		Name    string

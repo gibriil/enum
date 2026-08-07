@@ -19,10 +19,10 @@ var registry = struct {
 	data: map[reflect.Type]*definition{},
 }
 
-func clearRegistry() {
+func clearRegisteredNamespace[T any]() {
 	registry.Lock()
 	defer registry.Unlock()
-	clear(registry.data)
+	delete(registry.data, reflect.TypeFor[T]())
 }
 
 // Definition holds the namespace information for the enum list.
@@ -83,7 +83,7 @@ func Define[T any](schema T) T {
 		embedded := member.Addr().Interface().(initializer)
 		embedded.initialize(&def, i)
 
-		def.values = append(def.values, member.Addr().Interface().(Enum))
+		def.values = append(def.values, member.Interface().(Enum))
 		def.names = append(def.names, field.Name)
 
 		def.lookup[field.Name] = i
@@ -165,4 +165,12 @@ func (def *definition) Entries() iter.Seq2[string, Enum] {
 			}
 		}
 	}
+}
+
+func (def *definition) EnumType() reflect.Type {
+	return def.memberType
+}
+
+func (def *definition) Type() reflect.Type {
+	return def.identity
 }

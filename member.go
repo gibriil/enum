@@ -6,6 +6,7 @@ package enum
 
 import (
 	"database/sql/driver"
+	"reflect"
 )
 
 // Member is embedded in a struct to mark the struct type as an enum
@@ -84,4 +85,11 @@ func (e Member) Namespace() Namespace {
 		return Namespace{}
 	}
 	return Namespace{definition: e.def}
+}
+
+func (e Member) Type() reflect.Type {
+	if !e.Valid() {
+		return nil
+	}
+	return e.def.memberType
 }

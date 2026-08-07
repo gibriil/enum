@@ -1,3 +1,7 @@
+// Copyright 2026 Peter James Beard. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package enum_test
 
 import (
@@ -9,7 +13,6 @@ import (
 	"github.com/gibriil/enum"
 )
 
-// role represents an Okta-style role with embedded enum, a slice, and a map.
 type role struct {
 	enum.Member
 
@@ -27,7 +30,7 @@ var (
 	_ driver.Valuer          = (*role)(nil)
 )
 
-// AccessControl groups role assignments following Okta semantics.
+// AccessControl groups role assignments
 var accessControl = struct {
 	User    role
 	Guest   role
@@ -133,7 +136,7 @@ func TestCollectionsByName(t *testing.T) {
 				if ok != v.wantOk {
 					t.Fatalf("ByName(%q): ok=%v, want %v", v.Lookup, ok, v.wantOk)
 				}
-				if !ok {
+				if !v.wantOk {
 					return
 				}
 				if !enum.Equal(got, test.Want) {
@@ -168,7 +171,7 @@ func TestCollectionsByIndex(t *testing.T) {
 			if ok != test.wantOk {
 				t.Fatalf("ByIndex(%d): ok=%v, want %v", test.Index, ok, test.wantOk)
 			}
-			if !ok {
+			if !test.wantOk {
 				return
 			}
 			if !enum.Equal(got, test.Want) {

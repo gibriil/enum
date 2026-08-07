@@ -31,7 +31,7 @@ type colors struct {
 
 // Test to ensure that enums in list are properly indexed
 func TestColorsIndexes(t *testing.T) {
-	clearRegistry()
+	clearRegisteredNamespace[colors]()
 	Colors := Define(colors{})
 
 	if r := Colors.Red.Index(); r != 0 {
@@ -49,7 +49,7 @@ func TestColorsIndexes(t *testing.T) {
 
 // Test to ensure that member in list properly reflects enum name
 func TestColorsNames(t *testing.T) {
-	clearRegistry()
+	clearRegisteredNamespace[colors]()
 	Colors := Define(colors{
 		Red:   color{},
 		Green: color{},
@@ -71,7 +71,7 @@ func TestColorsNames(t *testing.T) {
 
 // Test to ensure enum members are unique in the list
 func TestColorValuesAreDistinct(t *testing.T) {
-	clearRegistry()
+	clearRegisteredNamespace[colors]()
 	Colors := Define(colors{
 		Red:   color{},
 		Green: color{},

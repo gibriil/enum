@@ -1,3 +1,7 @@
+// Copyright 2026 Peter James Beard. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package enum
 
 import (
@@ -16,7 +20,7 @@ func ByNameAs[E Enum, T any](namespace T, name string) (*E, error) {
 	registry.RUnlock()
 
 	if !ok {
-		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType)
+		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
 	}
 
 	enum, ok := def.ByName(name)
@@ -44,7 +48,7 @@ func ByIndexAs[E Enum, T any](namespace T, index int) (*E, error) {
 	registry.RUnlock()
 
 	if !ok {
-		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType)
+		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
 	}
 
 	enum, ok := def.ByIndex(index)
@@ -73,7 +77,7 @@ func ValuesAs[E Enum, T any](namespace T) ([]E, error) {
 	registry.RUnlock()
 
 	if !ok {
-		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType)
+		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
 	}
 
 	if enumType != enumType {
@@ -108,7 +112,7 @@ func AllAs[E Enum, T any](namespace T) iter.Seq2[*E, error] {
 
 	if !ok {
 		return func(yield func(*E, error) bool) {
-			err := fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType)
+			err := fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
 			if !yield(nil, err) {
 				return
 			}
