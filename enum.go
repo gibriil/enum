@@ -75,10 +75,12 @@ package enum
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
-	ErrUninitialized = errors.New("Enum is Zero Value")
+	ErrUninitialized = errors.New("enum is Zero Value")
+	ErrEnumNotFound  = errors.New("enum not found")
 )
 
 // Enum is a package sealed interface to identify the enum type
@@ -86,10 +88,10 @@ type Enum interface {
 	enum()
 	identity() Member
 
-	Index() int
+	fmt.Stringer
+
 	Name() string
-	String() string
-	IsZero() bool
+	Index() int
 	Valid() bool
 }
 

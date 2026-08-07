@@ -35,7 +35,7 @@ func (e Member) identity() Member {
 
 // Name returns the enum member name
 func (e Member) Name() string {
-	if e.IsZero() {
+	if !e.Valid() {
 		return ""
 	}
 	return e.def.names[e.index]
@@ -43,7 +43,7 @@ func (e Member) Name() string {
 
 // String returns the enum member name
 func (e Member) String() string {
-	if e.IsZero() {
+	if !e.Valid() {
 		return ""
 	}
 	return e.def.names[e.index]
@@ -54,19 +54,14 @@ func (e Member) Index() int {
 	return e.index
 }
 
-// IsZero reports whether the member is its zero value
-func (e Member) IsZero() bool {
-	return e.def == nil
-}
-
 // Valid reports whether or not the enum has been initialized
 func (e Member) Valid() bool {
-	return !e.IsZero()
+	return e.def != nil
 }
 
 // MarshalText marshals the enum member name
 func (e Member) MarshalText() ([]byte, error) {
-	if e.IsZero() {
+	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
 	return []byte(e.def.names[e.index]), nil
@@ -74,7 +69,7 @@ func (e Member) MarshalText() ([]byte, error) {
 
 // Value allows the driver to handle the name of the enum member
 func (e Member) Value() (driver.Value, error) {
-	if e.IsZero() {
+	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
 	return e.def.names[e.index], nil
@@ -85,7 +80,7 @@ func (e Member) Value() (driver.Value, error) {
 func (e Member) enum() {}
 
 func (e Member) Namespace() Namespace {
-	if e.IsZero() {
+	if !e.Valid() {
 		return Namespace{}
 	}
 	return Namespace{definition: e.def}

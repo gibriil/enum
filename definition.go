@@ -27,13 +27,14 @@ func clearRegistry() {
 
 // Definition holds the namespace information for the enum list.
 type definition struct {
-	identity reflect.Type   // Enum Namespace type
-	name     string         // Enum Namespace Name
-	length   int            // Number of struct members
-	values   []Enum         // Slice of all initialized enum members
-	names    []string       // Slice of names for each initialized enum member
-	lookup   map[string]int //Lookup map for identifying the values index of an enum member by name
-	metadata []metadata     // Slice of the reflection details of each enum member
+	identity   reflect.Type   // Enum Namespace type
+	name       string         // Enum Namespace Name
+	memberType reflect.Type   // Enum Member Type
+	length     int            // Number of struct members
+	values     []Enum         // Slice of all initialized enum members
+	names      []string       // Slice of names for each initialized enum member
+	lookup     map[string]int //Lookup map for identifying the values index of an enum member by name
+	metadata   []metadata     // Slice of the reflection details of each enum member
 }
 
 // Metadata holds the reflection information for an enum
@@ -68,6 +69,10 @@ func Define[T any](schema T) T {
 
 	for i := 0; i < class.NumField(); i++ {
 		field := class.Field(i)
+
+		if def.memberType != field.Type {
+			def.memberType = field.Type
+		}
 
 		if !field.Type.Implements(reflect.TypeFor[Enum]()) {
 			continue
@@ -116,7 +121,7 @@ func (def *definition) ByName(name string) (Enum, bool) {
 	return def.values[index], true
 }
 
-// ByIndex returns the enum member by the index os its position in the enum list
+// ByIndex returns the enum member by the index of its position in the enum list
 func (def *definition) ByIndex(index int) (Enum, bool) {
 	if index < 0 || index >= def.Len() {
 		return Member{}, false
@@ -160,10 +165,4 @@ func (def *definition) Entries() iter.Seq2[string, Enum] {
 			}
 		}
 	}
-}
-
-// namespace marks Namespace as a valid enum Namespace implementation.
-// It intentionally has no behavior; it seals the Namespace interface.
-func (def *definition) namespace() string {
-	return def.name
 }

@@ -1,4 +1,4 @@
-# Enum
+# Enum [![Go Reference](https://pkg.go.dev/badge/github.com/gibriil/enum.svg)](https://pkg.go.dev/github.com/gibriil/enum)
 
 <!-- The enum package aims to become the canonical way to build typed registries in Go. Enums are simply the first and most common registry. -->
 

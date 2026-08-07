@@ -39,7 +39,7 @@ func ByName[T any](namespace T, name string) (Enum, bool) {
 	return def.ByName(name)
 }
 
-// ByIndex returns the enum member by the index os its position in the enum list
+// ByIndex returns the enum member by the index of its position in the enum list
 func ByIndex[T any](namespace T, index int) (Enum, bool) {
 	registry.RLock()
 	defer registry.RUnlock()
