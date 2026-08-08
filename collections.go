@@ -18,10 +18,6 @@ func Equal(a, b Enum) bool {
 		return false
 	}
 
-	if !a.Valid() && !b.Valid() {
-		return true
-	}
-
 	return a.identity() == b.identity()
 }
 

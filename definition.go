@@ -54,9 +54,11 @@ func Define[T any](schema T) T {
 		panic("enum.Define requires a struct")
 	}
 
+	registry.RLock()
 	if _, exists := registry.data[class]; exists {
 		panic(fmt.Sprintf("enum has already been defined for %s", class))
 	}
+	registry.RUnlock()
 
 	def := definition{
 		identity: class,
@@ -67,35 +69,41 @@ func Define[T any](schema T) T {
 		metadata: []metadata{},
 	}
 
+	memberIndex := 0
+
 	for i := 0; i < class.NumField(); i++ {
 		field := class.Field(i)
-
-		if def.memberType != field.Type {
-			def.memberType = field.Type
-		}
 
 		if !field.Type.Implements(reflect.TypeFor[Enum]()) {
 			continue
 		}
 
-		member := reflect.ValueOf(&schema).Elem().FieldByIndex(field.Index)
+		if def.memberType == nil {
+			def.memberType = field.Type
+		} else if def.memberType != field.Type {
+			panic(fmt.Sprintf("the %s Namespace must contain only one enum type: set as %s, tried to add %s", def.identity.Name(), def.memberType.Name(), field.Type.Name()))
+		}
+
+		member := reflect.ValueOf(&schema).Elem().Field(i)
 
 		embedded := member.Addr().Interface().(initializer)
-		embedded.initialize(&def, i)
+		embedded.initialize(&def, memberIndex)
 
 		def.values = append(def.values, member.Interface().(Enum))
 		def.names = append(def.names, field.Name)
 
-		def.lookup[field.Name] = i
+		def.lookup[field.Name] = memberIndex
 
 		def.metadata = append(def.metadata, metadata{
 			Name:  field.Name,
 			Field: field,
 			Type:  field.Type,
 		})
+
+		memberIndex++
 	}
 
-	def.length = len(def.values)
+	def.length = memberIndex
 
 	registry.Lock()
 	registry.data[class] = &def
