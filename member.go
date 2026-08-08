@@ -80,6 +80,7 @@ func (e Member) Value() (driver.Value, error) {
 // It intentionally has no behavior; it seals the Enum interface.
 func (e Member) enum() {}
 
+// Namespace surfaces Enum Namespace with collection functions
 func (e Member) Namespace() Namespace {
 	if !e.Valid() {
 		return Namespace{}
@@ -87,6 +88,7 @@ func (e Member) Namespace() Namespace {
 	return Namespace{definition: e.def}
 }
 
+// Type returns the cached Type of Enum
 func (e Member) Type() reflect.Type {
 	if !e.Valid() {
 		return nil

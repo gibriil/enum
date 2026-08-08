@@ -174,13 +174,123 @@ func TestCollectionsByNameAs(t *testing.T) {
 }
 
 func TestCollectionsByIndexAs(t *testing.T) {
+	tests := []struct {
+		Name    string
+		Index   int
+		Want    itemTier
+		wantErr bool
+	}{
+		{"Common", 0, rarityTiers.Common, false},
+		{"Uncommon", 1, rarityTiers.Uncommon, false},
+		{"Rare", 2, rarityTiers.Rare, false},
+		{"Epic", 3, rarityTiers.Epic, false},
+		{"Legendary", 4, rarityTiers.Legendary, false},
+		{"TooHigh", len(enum.Values(rarityTiers)), itemTier{}, true},
+	}
 
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			got, err := enum.ByIndexAs[itemTier](rarityTiers, test.Index)
+
+			if err != nil && !test.wantErr {
+				t.Fatalf(
+					"ByIndexAs[%s](%d): err=%v, wantErr=%v",
+					rarityTiers.Rare.Type().Name(),
+					test.Index,
+					err,
+					test.wantErr,
+				)
+			}
+
+			if test.wantErr {
+				if got != nil {
+					t.Errorf("ByIndexAs[%s](%d): got %v, want nil",
+						rarityTiers.Rare.Type().Name(),
+						test.Index,
+						got,
+					)
+				}
+				return
+			}
+
+			if got == nil {
+				t.Fatal("ByIndexAs returned nil member without an error")
+			}
+
+			if !enum.Equal(*got, test.Want) {
+				t.Errorf(
+					"ByIndexAs[%s](%d): got %v, want %v",
+					got.Type().Name(),
+					test.Index,
+					got,
+					test.Want,
+				)
+			}
+
+			if got.Index() != test.Index {
+				t.Errorf("Index() = %d, want %d", got.Index(), test.Index)
+			}
+		})
+	}
 }
 
 func TestCollectionsValuesAs(t *testing.T) {
+	tests := []struct {
+		Name    string
+		Index   int
+		Want    itemTier
+		wantErr bool
+	}{
+		{"Common", 0, rarityTiers.Common, false},
+		{"Uncommon", 1, rarityTiers.Uncommon, false},
+		{"Rare", 2, rarityTiers.Rare, false},
+		{"Epic", 3, rarityTiers.Epic, false},
+		{"Legendary", 4, rarityTiers.Legendary, false},
+	}
 
+	members, err := enum.ValuesAs[itemTier](rarityTiers)
+
+	if err != nil {
+		t.Fatalf(
+			"ValuesAs[%s](): err=%v",
+			rarityTiers.Rare.Type().Name(),
+			err,
+		)
+	}
+
+	if len(members) != len(tests) {
+		t.Fatalf("unexpected Values length: got %d, want %d", len(tests), len(members))
+	}
+
+	for i, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			tier := members[i]
+			if !enum.Equal(tier, test.Want) {
+				t.Errorf("Value did not match expected enum: got %s, want %s", tier, test.Want)
+			}
+		})
+	}
 }
 
 func TestCollectionsAllAs(t *testing.T) {
+	tests := []struct {
+		Name    string
+		Index   int
+		Want    itemTier
+		wantErr bool
+	}{
+		{"Common", 0, rarityTiers.Common, false},
+		{"Uncommon", 1, rarityTiers.Uncommon, false},
+		{"Rare", 2, rarityTiers.Rare, false},
+		{"Epic", 3, rarityTiers.Epic, false},
+		{"Legendary", 4, rarityTiers.Legendary, false},
+	}
 
+	for e := range enum.AllAs[itemTier](rarityTiers) {
+		t.Run(e.Name(), func(t *testing.T) {
+			if !enum.Equal(*e, tests[e.Index()].Want) {
+				t.Errorf("iteration did not yield expected enum: got %s, want %s", e, tests[e.Index()].Want)
+			}
+		})
+	}
 }

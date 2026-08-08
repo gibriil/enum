@@ -80,7 +80,7 @@ func ValuesAs[E Enum, T any](namespace T) ([]E, error) {
 		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
 	}
 
-	if enumType != enumType {
+	if def.memberType != enumType {
 		return nil, fmt.Errorf("failed to cast %s to %s", def.memberType, enumType)
 	}
 
@@ -119,7 +119,7 @@ func AllAs[E Enum, T any](namespace T) iter.Seq2[*E, error] {
 		}
 	}
 
-	if enumType != enumType {
+	if def.memberType != enumType {
 		return func(yield func(*E, error) bool) {
 			err := fmt.Errorf("failed to cast %s to %s", def.memberType, enumType)
 			if !yield(nil, err) {
@@ -128,7 +128,9 @@ func AllAs[E Enum, T any](namespace T) iter.Seq2[*E, error] {
 		}
 	}
 
-	arr := def.Values()
+	arr := make([]Enum, def.length)
+
+	copy(arr, def.Values())
 
 	return func(yield func(*E, error) bool) {
 		for _, enum := range arr {
