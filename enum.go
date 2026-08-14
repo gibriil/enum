@@ -39,7 +39,7 @@ Because an enum is just a struct, we can build enhanced enums that carry additio
 		CarbonPerKilometer int
 	}
 
-These are identical to our basic enum in every other way. Unlike the name and index of enums, the additional data is technically mutable. By convention enhanced enum data should be treated as immutable, though mutation may be desirable in some cases.
+These are identical to our basic enum in every other way.
 
 Create an Enum list or namespace.
 

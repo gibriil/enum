@@ -9,6 +9,8 @@ import (
 	"reflect"
 )
 
+type Entry[T any] func(T, string)
+
 // Member is embedded in a struct to mark the struct type as an enum
 //
 // The zero value of Member is a nil definition signifying the enum is not initialized

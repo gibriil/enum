@@ -5,7 +5,6 @@
 package enum
 
 import (
-	"fmt"
 	"iter"
 	"reflect"
 	"sync"
@@ -17,12 +16,6 @@ var registry = struct {
 	data map[reflect.Type]*definition
 }{
 	data: map[reflect.Type]*definition{},
-}
-
-func clearRegisteredNamespace[T any]() {
-	registry.Lock()
-	defer registry.Unlock()
-	delete(registry.data, reflect.TypeFor[T]())
 }
 
 // Definition holds the namespace information for the enum list.
@@ -42,74 +35,6 @@ type metadata struct {
 	Name  string
 	Field reflect.StructField
 	Type  reflect.Type
-}
-
-// Define registers the struct enum namespace and uses reflection over
-// the struct fields to initialize each enum member
-func Define[T any](schema T) T {
-
-	class := reflect.TypeFor[T]()
-
-	if class.Kind() != reflect.Struct {
-		panic("enum.Define requires a struct")
-	}
-
-	registry.RLock()
-	if _, exists := registry.data[class]; exists {
-		panic(fmt.Sprintf("enum has already been defined for %s", class))
-	}
-	registry.RUnlock()
-
-	def := definition{
-		identity: class,
-		name:     class.Name(),
-		values:   []Enum{},
-		names:    []string{},
-		lookup:   map[string]int{},
-		metadata: []metadata{},
-	}
-
-	memberIndex := 0
-
-	for i := 0; i < class.NumField(); i++ {
-		field := class.Field(i)
-
-		if !field.Type.Implements(reflect.TypeFor[Enum]()) {
-			continue
-		}
-
-		if def.memberType == nil {
-			def.memberType = field.Type
-		} else if def.memberType != field.Type {
-			panic(fmt.Sprintf("the %s Namespace must contain only one enum type: set as %s, tried to add %s", def.identity.Name(), def.memberType.Name(), field.Type.Name()))
-		}
-
-		member := reflect.ValueOf(&schema).Elem().Field(i)
-
-		embedded := member.Addr().Interface().(initializer)
-		embedded.initialize(&def, memberIndex)
-
-		def.values = append(def.values, member.Interface().(Enum))
-		def.names = append(def.names, field.Name)
-
-		def.lookup[field.Name] = memberIndex
-
-		def.metadata = append(def.metadata, metadata{
-			Name:  field.Name,
-			Field: field,
-			Type:  field.Type,
-		})
-
-		memberIndex++
-	}
-
-	def.length = memberIndex
-
-	registry.Lock()
-	registry.data[class] = &def
-	registry.Unlock()
-
-	return schema
 }
 
 // Len returns the number of initialized enum members
