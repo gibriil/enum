@@ -78,8 +78,8 @@ func Define[T any](schema T) T {
 	return schema
 }
 
-// Register registers a comparable type into a Namespace and initializes each enum member
-func Register[T comparable](entries ...Entry[T]) Namespace {
+// DefineType registers a comparable type into a Namespace and initializes each enum member
+func DefineType[T comparable](entries ...string) Namespace {
 
 	class := reflect.TypeFor[T]()
 
@@ -105,12 +105,12 @@ func Register[T comparable](entries ...Entry[T]) Namespace {
 		}
 
 		def.values = append(def.values, member)
-		def.names = append(def.names, entry.Name)
+		def.names = append(def.names, entry)
 
-		def.lookup[entry.Name] = memberIndex
+		def.lookup[entry] = memberIndex
 
 		def.metadata = append(def.metadata, metadata{
-			Name: entry.Name,
+			Name: entry,
 			Type: class,
 		})
 	}
