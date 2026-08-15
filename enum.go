@@ -79,8 +79,9 @@ import (
 )
 
 var (
-	ErrUninitialized = errors.New("enum is Zero Value")
-	ErrEnumNotFound  = errors.New("enum not found")
+	ErrUninitialized   = errors.New("enum is Zero Value")
+	ErrEnumNotFound    = errors.New("enum not found")
+	ErrInvalidEnumType = errors.New("enum is not expected type")
 )
 
 // Enum is a package sealed interface to identify the enum type
