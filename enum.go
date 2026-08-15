@@ -80,6 +80,7 @@ import (
 
 var (
 	ErrUninitialized   = errors.New("enum is Zero Value")
+	ErrNotDefined      = errors.New("enum namespace has no registered definition")
 	ErrEnumNotFound    = errors.New("enum not found")
 	ErrInvalidEnumType = errors.New("enum is not expected type")
 )

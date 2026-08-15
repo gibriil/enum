@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
+	"slices"
 )
 
 // Define registers the struct enum namespace and uses reflection over
@@ -79,9 +80,13 @@ func Define[T any](schema T) T {
 }
 
 // DefineType registers a comparable type into a Namespace and initializes each enum member
-func DefineType[T comparable](entries ...string) Namespace {
+func DefineType[T comparable](entries ...As[T]) Namespace {
 
 	class := reflect.TypeFor[T]()
+
+	if len(entries) == 0 {
+		panic(fmt.Sprintf("attempted to register %v enums with 0 members", class))
+	}
 
 	registry.RLock()
 	if _, exists := registry.data[class]; exists {
@@ -90,6 +95,7 @@ func DefineType[T comparable](entries ...string) Namespace {
 	registry.RUnlock()
 
 	def := definition{
+		identity:   class,
 		memberType: class,
 		name:       class.Name(),
 		values:     make([]Enum, len(entries)),
@@ -99,20 +105,26 @@ func DefineType[T comparable](entries ...string) Namespace {
 	}
 
 	for memberIndex, entry := range entries {
-		member := Member{
-			def:   &def,
-			index: memberIndex,
+		if slices.Contains(def.names, entry.Name) {
+			panic(fmt.Sprintf("%v enum already has member entry for %s", class, entry.Name))
+		}
+		member := MemberAs[T]{
+			Member: Member{
+				def:   &def,
+				index: memberIndex,
+			},
+			raw: entry.Value,
 		}
 
-		def.values = append(def.values, member)
-		def.names = append(def.names, entry)
+		def.values[memberIndex] = member
+		def.names[memberIndex] = entry.Name
 
-		def.lookup[entry] = memberIndex
+		def.lookup[entry.Name] = memberIndex
 
-		def.metadata = append(def.metadata, metadata{
-			Name: entry,
+		def.metadata[memberIndex] = metadata{
+			Name: entry.Name,
 			Type: class,
-		})
+		}
 	}
 
 	registry.Lock()

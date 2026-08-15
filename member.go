@@ -17,6 +17,16 @@ type Member struct {
 	index int
 }
 
+type MemberAs[T comparable] struct {
+	Member
+	raw T
+}
+
+type As[T comparable] struct {
+	Name  string
+	Value T
+}
+
 // Initializer is a non-exported interface for reflection type safety
 type initializer interface {
 	initialize(*definition, int)
@@ -68,12 +78,41 @@ func (e Member) MarshalText() ([]byte, error) {
 	return []byte(e.def.names[e.index]), nil
 }
 
+func (e *MemberAs[T]) UnmarshalText(text []byte) error {
+	registry.RLock()
+	namespace, ok := registry.data[reflect.TypeFor[T]()]
+	registry.RUnlock()
+
+	if !ok {
+		return ErrNotDefined
+	}
+
+	enum, ok := namespace.ByName(string(text))
+
+	if !ok {
+		return ErrEnumNotFound
+	}
+
+	member := enum.Raw()
+
+	*e = enum
+
+}
+
 // Value allows the driver to handle the name of the enum member
 func (e Member) Value() (driver.Value, error) {
 	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
 	return e.def.names[e.index], nil
+}
+
+// Value allows the driver to handle the value of the enum member
+func (e MemberAs[T]) Value() (driver.Value, error) {
+	if !e.Valid() {
+		return nil, ErrUninitialized
+	}
+	return e.raw, nil
 }
 
 // enum marks Member as a valid enum implementation.
@@ -94,4 +133,9 @@ func (e Member) Type() reflect.Type {
 		return nil
 	}
 	return e.def.memberType
+}
+
+// Raw returns the enums MemberAs raw value
+func (e MemberAs[T]) Raw() T {
+	return e.raw
 }
