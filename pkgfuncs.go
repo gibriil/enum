@@ -78,8 +78,50 @@ func Define[T any](schema T) T {
 	return schema
 }
 
-func Register[T any](entries ...Entry[T]) {
+// Register registers a comparable type into a Namespace and initializes each enum member
+func Register[T comparable](entries ...Entry[T]) Namespace {
 
+	class := reflect.TypeFor[T]()
+
+	registry.RLock()
+	if _, exists := registry.data[class]; exists {
+		panic(fmt.Sprintf("enum has already been defined for %s", class))
+	}
+	registry.RUnlock()
+
+	def := definition{
+		memberType: class,
+		name:       class.Name(),
+		values:     make([]Enum, len(entries)),
+		names:      make([]string, len(entries)),
+		lookup:     make(map[string]int, len(entries)),
+		metadata:   make([]metadata, len(entries)),
+	}
+
+	for memberIndex, entry := range entries {
+		member := Member{
+			def:   &def,
+			index: memberIndex,
+		}
+
+		def.values = append(def.values, member)
+		def.names = append(def.names, entry.Name)
+
+		def.lookup[entry.Name] = memberIndex
+
+		def.metadata = append(def.metadata, metadata{
+			Name: entry.Name,
+			Type: class,
+		})
+	}
+
+	registry.Lock()
+	registry.data[class] = &def
+	registry.Unlock()
+
+	return Namespace{
+		definition: &def,
+	}
 }
 
 func clearRegisteredNamespace[T any]() {
@@ -243,7 +285,7 @@ func Names[T any](namespace T) []string {
 	return def.Names()
 }
 
-// All provides allocation-free iteration over all enum members.
+// All provides iteration over all enum members.
 // Yields Member
 //
 // No yield for any internal error
@@ -312,7 +354,7 @@ func AllAs[E Enum, T any](namespace T) iter.Seq2[*E, error] {
 	}
 }
 
-// Entries provides allocation-free iteration over all enum members.
+// Entries provides iteration over all enum members.
 // Yields Member name and associated Member
 //
 // No yield for any internal error
@@ -326,4 +368,25 @@ func Entries[T any](namespace T) iter.Seq2[string, Enum] {
 	}
 
 	return def.Entries()
+}
+
+func Decode[T Enum](namespace Namespace, enum *T, src any) error {
+	if namespace.EnumType() != reflect.TypeFor[T]() {
+		return ErrInvalidEnumType
+	}
+
+	if src == nil {
+		return nil
+	}
+
+	var e Enum
+
+	err := namespace.Scan(&e, src)
+
+	if err != nil {
+		return err
+	}
+
+	*enum = e.(T)
+	return nil
 }

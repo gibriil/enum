@@ -9,7 +9,10 @@ import (
 	"reflect"
 )
 
-type Entry[T any] func(T, string)
+type Entry[T any] struct {
+	Value T
+	Name  string
+}
 
 // Member is embedded in a struct to mark the struct type as an enum
 //
