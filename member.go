@@ -17,22 +17,28 @@ type Member struct {
 	index int
 }
 
+// MemberAs is the internally created member for an Enum with an underlying type
+//
+// The zero value of MemberAs is a nil definition signifying the enum is not initialized
 type MemberAs[T comparable] struct {
 	Member
 	raw T
 }
 
+// As is a package struct required for registering an underlying type as an Enum
+//
+// See DefineType
 type As[T comparable] struct {
 	Name  string
 	Value T
 }
 
-// Initializer is a non-exported interface for reflection type safety
+// initializer is a non-exported interface for reflection type safety
 type initializer interface {
 	initialize(*definition, int)
 }
 
-// Initialize initializes the enum member with its namespace definition
+// initialize initializes the enum member with its namespace definition
 // and sets sets its position index in the list
 func (e *Member) initialize(def *definition, index int) {
 	e.def = def
@@ -78,6 +84,7 @@ func (e Member) MarshalText() ([]byte, error) {
 	return []byte(e.def.names[e.index]), nil
 }
 
+// UnmarshalText un-marshals the data to an Enum with an underlying type
 func (e *MemberAs[T]) UnmarshalText(text []byte) error {
 	registry.RLock()
 	namespace, ok := registry.data[reflect.TypeFor[T]()]
@@ -107,7 +114,7 @@ func (e Member) Value() (driver.Value, error) {
 	return e.def.names[e.index], nil
 }
 
-// Value allows the driver to handle the value of the enum member
+// Value allows the driver to handle the value of the enum member with an underlying type
 func (e MemberAs[T]) Value() (driver.Value, error) {
 	if !e.Valid() {
 		return nil, ErrUninitialized

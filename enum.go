@@ -80,7 +80,7 @@ import (
 
 var (
 	ErrUninitialized   = errors.New("enum is Zero Value")
-	ErrNotDefined      = errors.New("enum namespace has no registered definition")
+	ErrNotDefined      = errors.New("enum has no registered definition")
 	ErrEnumNotFound    = errors.New("enum not found")
 	ErrInvalidEnumType = errors.New("enum is not expected type")
 )
@@ -97,12 +97,14 @@ type Enum interface {
 	Valid() bool
 }
 
+// EnumAs is a package sealed interface to identify the enum of an underlying type
 type EnumAs[T comparable] interface {
 	Enum
 
 	Raw() T
 }
 
+// Namespace carries the internal registered definition of an Enum set
 type Namespace struct {
 	*definition
 }

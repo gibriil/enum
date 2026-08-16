@@ -136,8 +136,15 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 	}
 }
 
+// Of loops through definition returns the an MemberAs enum that is equal to the comparable type T
+//
+// Panics if type is not registered
 func Of[T comparable](enum T) MemberAs[T] {
-	def := registry.data[reflect.TypeFor[T]()]
+	def, exists := registry.data[reflect.TypeFor[T]()]
+
+	if !exists {
+		panic(ErrNotDefined)
+	}
 
 	for e := range def.All() {
 		cnst, ok := e.(EnumAs[T])
@@ -149,6 +156,21 @@ func Of[T comparable](enum T) MemberAs[T] {
 		}
 	}
 	return MemberAs[T]{}
+}
+
+// DefinitionFor returns the registered definition for an enum type
+//
+// Panics if type is not registered
+func DefinitionFor[T any]() Namespace {
+	def, exists := registry.data[reflect.TypeFor[T]()]
+
+	if !exists {
+		panic(ErrNotDefined)
+	}
+
+	return Namespace{
+		definition: def,
+	}
 }
 
 func clearRegisteredNamespace[T any]() {
@@ -166,6 +188,17 @@ func Equal(a, b Enum) bool {
 	}
 
 	return a.identity() == b.identity()
+}
+
+// Equal evaluates to Enums and returns if their identity is deeply equal
+//
+// This is needed to compare Enums containing non-comparable members
+func DeepEqual(a, b Enum) bool {
+	if !Equal(a, b) {
+		return false
+	}
+
+	return reflect.DeepEqual(a, b)
 }
 
 // ByName returns the enum member by name.

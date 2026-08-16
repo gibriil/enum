@@ -142,6 +142,7 @@ func (def *definition) Type() reflect.Type {
 	return def.identity
 }
 
+// UnmarshalText is a helper for creating UnmarshalText on Enum type
 func (def *definition) UnmarshalText(enum *Enum, text []byte) error {
 	if def == nil {
 		return nil
@@ -156,6 +157,7 @@ func (def *definition) UnmarshalText(enum *Enum, text []byte) error {
 	return nil
 }
 
+// Scan is a helper for creating Scan on Enum type
 func (def *definition) Scan(enum *Enum, src any) error {
 	if def == nil || src == nil {
 		return nil
