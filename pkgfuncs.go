@@ -21,12 +21,6 @@ func Define[T any](schema T) T {
 		panic("enum.Define requires a struct")
 	}
 
-	registry.RLock()
-	if _, exists := registry.data[class]; exists {
-		panic(fmt.Sprintf("enum has already been defined for %s", class))
-	}
-	registry.RUnlock()
-
 	def := definition{
 		identity: class,
 		name:     class.Name(),
@@ -56,7 +50,13 @@ func Define[T any](schema T) T {
 		embedded := member.Addr().Interface().(initializer)
 		embedded.initialize(&def, memberIndex)
 
-		def.values = append(def.values, member.Interface().(Enum))
+		e := member.Interface().(Enum)
+
+		if r, ok := e.identity().Type().FieldByName("raw"); ok && r.Type != def.memberType {
+			panic(fmt.Sprintf("error initializing embedded member: got enum.MemberAs[%s], want enum.Member[%s] or enum.Member", r.Type.Name(), def.memberType.Name()))
+		}
+
+		def.values = append(def.values, e)
 		def.names = append(def.names, field.Name)
 
 		def.lookup[field.Name] = memberIndex
@@ -73,8 +73,13 @@ func Define[T any](schema T) T {
 	def.length = memberIndex
 
 	registry.Lock()
+	defer registry.Unlock()
+
+	if _, exists := registry.data[class]; exists {
+		panic(fmt.Sprintf("enum has already been defined for %s", class))
+	}
+
 	registry.data[class] = &def
-	registry.Unlock()
 
 	return schema
 }
@@ -87,12 +92,6 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 	if len(entries) == 0 {
 		panic(fmt.Sprintf("attempted to register %v enums with 0 members", class))
 	}
-
-	registry.RLock()
-	if _, exists := registry.data[class]; exists {
-		panic(fmt.Sprintf("enum has already been defined for %s", class))
-	}
-	registry.RUnlock()
 
 	def := definition{
 		identity:   class,
@@ -128,8 +127,13 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 	}
 
 	registry.Lock()
+	defer registry.Unlock()
+
+	if _, exists := registry.data[class]; exists {
+		panic(fmt.Sprintf("enum has already been defined for %s", class))
+	}
+
 	registry.data[class] = &def
-	registry.Unlock()
 
 	return Namespace{
 		definition: &def,
@@ -140,7 +144,9 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 //
 // Panics if type is not registered
 func Of[T comparable](enum T) MemberAs[T] {
+	registry.RLock()
 	def, exists := registry.data[reflect.TypeFor[T]()]
+	registry.RUnlock()
 
 	if !exists {
 		panic(ErrNotDefined)
@@ -162,7 +168,9 @@ func Of[T comparable](enum T) MemberAs[T] {
 //
 // Panics if type is not registered
 func DefinitionFor[T any]() Namespace {
+	registry.RLock()
 	def, exists := registry.data[reflect.TypeFor[T]()]
+	registry.RUnlock()
 
 	if !exists {
 		panic(ErrNotDefined)

@@ -23,8 +23,8 @@ var ServerStates = enum.DefineType(
 )
 
 func (ss ServerState) String() string {
-	enum := enum.Of(ss)
-	return enum.Name()
+	e := enum.Of(ss)
+	return e.Name()
 }
 
 func main() {
