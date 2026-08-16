@@ -136,6 +136,21 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 	}
 }
 
+func Of[T comparable](enum T) MemberAs[T] {
+	def := registry.data[reflect.TypeFor[T]()]
+
+	for e := range def.All() {
+		cnst, ok := e.(EnumAs[T])
+		if !ok {
+			panic(ErrInvalidEnumType)
+		}
+		if cnst.Raw() == enum {
+			return cnst.(MemberAs[T])
+		}
+	}
+	return MemberAs[T]{}
+}
+
 func clearRegisteredNamespace[T any]() {
 	registry.Lock()
 	defer registry.Unlock()

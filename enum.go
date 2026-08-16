@@ -97,6 +97,12 @@ type Enum interface {
 	Valid() bool
 }
 
+type EnumAs[T comparable] interface {
+	Enum
+
+	Raw() T
+}
+
 type Namespace struct {
 	*definition
 }

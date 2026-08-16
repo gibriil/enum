@@ -93,10 +93,10 @@ func (e *MemberAs[T]) UnmarshalText(text []byte) error {
 		return ErrEnumNotFound
 	}
 
-	member := enum.Raw()
+	constEnum, ok := enum.(EnumAs[T])
 
-	*e = enum
-
+	*e = constEnum.(MemberAs[T])
+	return nil
 }
 
 // Value allows the driver to handle the name of the enum member
