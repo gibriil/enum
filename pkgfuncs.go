@@ -53,7 +53,7 @@ func Define[T any](schema T) T {
 		e := member.Interface().(Enum)
 
 		if r, ok := e.identity().Type().FieldByName("raw"); ok && r.Type != def.memberType {
-			panic(fmt.Sprintf("error initializing embedded member: got enum.MemberAs[%s], want enum.Member[%s] or enum.Member", r.Type.Name(), def.memberType.Name()))
+			panic(fmt.Sprintf("error initializing embedded member: got enum.MemberAs[%s], want enum.Member", r.Type.Name()))
 		}
 
 		def.values = append(def.values, e)
