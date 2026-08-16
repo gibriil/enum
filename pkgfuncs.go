@@ -65,6 +65,7 @@ func Define[T any](schema T) T {
 			Name:  field.Name,
 			Field: field,
 			Type:  field.Type,
+			Value: member,
 		})
 
 		memberIndex++
@@ -97,6 +98,7 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 		identity:   class,
 		memberType: class,
 		name:       class.Name(),
+		length:     len(entries),
 		values:     make([]Enum, len(entries)),
 		names:      make([]string, len(entries)),
 		lookup:     make(map[string]int, len(entries)),
@@ -121,8 +123,9 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 		def.lookup[entry.Name] = memberIndex
 
 		def.metadata[memberIndex] = metadata{
-			Name: entry.Name,
-			Type: class,
+			Name:  entry.Name,
+			Type:  class,
+			Value: reflect.ValueOf(member),
 		}
 	}
 
@@ -187,7 +190,7 @@ func clearRegisteredNamespace[T any]() {
 	delete(registry.data, reflect.TypeFor[T]())
 }
 
-// Equal evaluates to Enums and returns if their identity is equal
+// Equal reports whether a and b identify the same enum member.
 //
 // This is needed for when Enums contain non-comparable members
 func Equal(a, b Enum) bool {
@@ -196,17 +199,6 @@ func Equal(a, b Enum) bool {
 	}
 
 	return a.identity() == b.identity()
-}
-
-// Equal evaluates to Enums and returns if their identity is deeply equal
-//
-// This is needed to compare Enums containing non-comparable members
-func DeepEqual(a, b Enum) bool {
-	if !Equal(a, b) {
-		return false
-	}
-
-	return reflect.DeepEqual(a, b)
 }
 
 // ByName returns the enum member by name.

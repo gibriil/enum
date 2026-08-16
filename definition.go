@@ -35,6 +35,7 @@ type metadata struct {
 	Name  string
 	Field reflect.StructField
 	Type  reflect.Type
+	Value reflect.Value
 }
 
 // Len returns the number of initialized enum members

@@ -61,3 +61,41 @@ func TestEnumEqualsConst(t *testing.T) {
 	}
 
 }
+
+func TestMemberAs(t *testing.T) {
+	type state uint8
+
+	const (
+		idle state = iota
+		running
+		stopped
+	)
+
+	states := enum.DefineType(
+		enum.As[state]{Name: "idle", Value: idle},
+		enum.As[state]{Name: "running", Value: running},
+		enum.As[state]{Name: "stopped", Value: stopped},
+	)
+
+	got := enum.Of(running)
+
+	if !got.Valid() {
+		t.Fatal("Of(running) returned invalid enum")
+	}
+
+	if got.Raw() != running {
+		t.Fatalf("Raw() = %v, want %v", got.Raw(), running)
+	}
+
+	if got.Name() != "running" {
+		t.Fatalf("Name() = %q, want %q", got.Name(), "running")
+	}
+
+	if got.Index() != 1 {
+		t.Fatalf("Index() = %d, want 1", got.Index())
+	}
+
+	if !enum.Equal(got, states.Values()[1]) {
+		t.Fatal("Of(running) did not identify the registered member")
+	}
+}
