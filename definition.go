@@ -8,6 +8,8 @@ import (
 	"iter"
 	"reflect"
 	"sync"
+
+	"github.com/gibriil/enum/internal"
 )
 
 // Registry is a key:value store for reflection caching
@@ -20,22 +22,14 @@ var registry = struct {
 
 // Definition holds the namespace information for the enum list.
 type definition struct {
-	identity   reflect.Type   // Enum Namespace type
-	name       string         // Enum Namespace Name
-	memberType reflect.Type   // Enum Member Type
-	length     int            // Number of struct members
-	values     []Enum         // Slice of all initialized enum members
-	names      []string       // Slice of names for each initialized enum member
-	lookup     map[string]int //Lookup map for identifying the values index of an enum member by name
-	metadata   []metadata     // Slice of the reflection details of each enum member
-}
-
-// Metadata holds the reflection information for an enum
-type metadata struct {
-	Name  string
-	Field reflect.StructField
-	Type  reflect.Type
-	Value reflect.Value
+	identity   reflect.Type        // Enum Namespace type
+	name       string              // Enum Namespace Name
+	memberType reflect.Type        // Enum Member Type
+	length     int                 // Number of struct members
+	values     []Enum              // Slice of all initialized enum members
+	names      []string            // Slice of names for each initialized enum member
+	lookup     map[string]int      //Lookup map for identifying the values index of an enum member by name
+	metadata   []internal.Metadata // Slice of the reflection details of each enum member
 }
 
 // Len returns the number of initialized enum members

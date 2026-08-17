@@ -39,7 +39,7 @@ type initializer interface {
 }
 
 // initialize initializes the enum member with its namespace definition
-// and sets sets its position index in the list
+// and sets its position index in the list
 func (e *Member) initialize(def *definition, index int) {
 	e.def = def
 	e.index = index

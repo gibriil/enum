@@ -1,4 +1,4 @@
-package main
+package go_by_example_main
 
 import (
 	"fmt"

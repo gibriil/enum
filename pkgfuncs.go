@@ -9,6 +9,8 @@ import (
 	"iter"
 	"reflect"
 	"slices"
+
+	"github.com/gibriil/enum/internal"
 )
 
 // Define registers the struct enum namespace and uses reflection over
@@ -27,7 +29,7 @@ func Define[T any](schema T) T {
 		values:   []Enum{},
 		names:    []string{},
 		lookup:   map[string]int{},
-		metadata: []metadata{},
+		metadata: []internal.Metadata{},
 	}
 
 	memberIndex := 0
@@ -61,7 +63,7 @@ func Define[T any](schema T) T {
 
 		def.lookup[field.Name] = memberIndex
 
-		def.metadata = append(def.metadata, metadata{
+		def.metadata = append(def.metadata, internal.Metadata{
 			Name:  field.Name,
 			Field: field,
 			Type:  field.Type,
@@ -102,7 +104,7 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 		values:     make([]Enum, len(entries)),
 		names:      make([]string, len(entries)),
 		lookup:     make(map[string]int, len(entries)),
-		metadata:   make([]metadata, len(entries)),
+		metadata:   make([]internal.Metadata, len(entries)),
 	}
 
 	for memberIndex, entry := range entries {
@@ -122,7 +124,7 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 
 		def.lookup[entry.Name] = memberIndex
 
-		def.metadata[memberIndex] = metadata{
+		def.metadata[memberIndex] = internal.Metadata{
 			Name:  entry.Name,
 			Type:  class,
 			Value: reflect.ValueOf(member),
