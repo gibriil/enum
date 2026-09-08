@@ -12,8 +12,7 @@ Unlike other Go enum packages, this is not a code generation tool. The package w
 
 ## Requirements
 
-- Go 1.26.0 or later (recommended for latest capabilities)
-- Go 1.23.0 or later (minimum)
+- Go 1.27 or later
 
 ##  Installation and Usage
 

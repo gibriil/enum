@@ -8,72 +8,62 @@ import (
 	"fmt"
 	"iter"
 	"reflect"
-	"slices"
 
 	"github.com/gibriil/enum/internal"
 )
 
 // Define registers the struct enum namespace and uses reflection over
 // the struct fields to initialize each enum member
-func Define[T any](schema T) T {
+func Define[T any, S any](schema S) Namespace[T] {
 
-	class := reflect.TypeFor[T]()
+	class := reflect.TypeFor[S]()
 
 	if class.Kind() != reflect.Struct {
 		panic("enum.Define requires a struct")
 	}
 
-	def := definition{
-		identity: class,
-		name:     class.Name(),
-		values:   []Enum{},
-		names:    []string{},
-		lookup:   map[string]int{},
-		metadata: []internal.Metadata{},
-	}
+	def := internal.InitializeDefinition[T](class, class.Name())
 
-	memberIndex := 0
+	entries := []internal.Entry[T]{}
+	metadata := []internal.Metadata{}
+
+	entryIndex := 0
 
 	for i := 0; i < class.NumField(); i++ {
 		field := class.Field(i)
 
-		if !field.Type.Implements(reflect.TypeFor[Enum]()) {
+		if !field.Type.Implements(reflect.TypeFor[Enum[T]]()) {
 			continue
 		}
 
-		if def.memberType == nil {
-			def.memberType = field.Type
-		} else if def.memberType != field.Type {
-			panic(fmt.Sprintf("the %s Namespace must contain only one enum type: set as %s, tried to add %s", def.identity.Name(), def.memberType.Name(), field.Type.Name()))
+		if def.EntryType() != field.Type {
+			panic(fmt.Sprintf("the %s Namespace must contain only one enum type: set as %s, tried to add %s", def.Type().Name(), def.EntryType().Name(), field.Type.Name()))
 		}
 
 		member := reflect.ValueOf(&schema).Elem().Field(i)
 
-		embedded := member.Addr().Interface().(initializer)
-		embedded.initialize(&def, memberIndex)
+		embedded := member.Addr().FieldByName("Entry").Interface().(internal.Entry[T])
 
-		e := member.Interface().(Enum)
+		internal.SetEntry(
+			&embedded,
+			member.Type().Name(),
+			member.Interface().(T),
+		)
 
-		if r, ok := e.identity().Type().FieldByName("raw"); ok && r.Type != def.memberType {
-			panic(fmt.Sprintf("error initializing embedded member: got enum.MemberAs[%s], want enum.Member", r.Type.Name()))
-		}
+		entries = append(entries, embedded)
 
-		def.values = append(def.values, e)
-		def.names = append(def.names, field.Name)
-
-		def.lookup[field.Name] = memberIndex
-
-		def.metadata = append(def.metadata, internal.Metadata{
+		metadata = append(metadata, internal.Metadata{
 			Name:  field.Name,
 			Field: field,
 			Type:  field.Type,
 			Value: member,
 		})
 
-		memberIndex++
+		entryIndex++
 	}
 
-	def.length = memberIndex
+	internal.RegisterDefinition(&def, entries...)
+	internal.AttachMetadata(&def, metadata...)
 
 	registry.Lock()
 	defer registry.Unlock()
@@ -84,11 +74,13 @@ func Define[T any](schema T) T {
 
 	registry.data[class] = &def
 
-	return schema
+	return Namespace[T]{
+		Definition: &def,
+	}
 }
 
 // DefineType registers a comparable type into a Namespace and initializes each enum member
-func DefineType[T comparable](entries ...As[T]) Namespace {
+func DefineType[T comparable](entries ...As[T]) Namespace[T] {
 
 	class := reflect.TypeFor[T]()
 
@@ -96,83 +88,40 @@ func DefineType[T comparable](entries ...As[T]) Namespace {
 		panic(fmt.Sprintf("attempted to register %v enums with 0 members", class))
 	}
 
-	def := definition{
-		identity:   class,
-		memberType: class,
-		name:       class.Name(),
-		length:     len(entries),
-		values:     make([]Enum, len(entries)),
-		names:      make([]string, len(entries)),
-		lookup:     make(map[string]int, len(entries)),
-		metadata:   make([]internal.Metadata, len(entries)),
-	}
+	fields := []reflect.StructField{}
 
-	for memberIndex, entry := range entries {
-		if slices.Contains(def.names, entry.Name) {
-			panic(fmt.Sprintf("%v enum already has member entry for %s", class, entry.Name))
-		}
-		member := MemberAs[T]{
-			Member: Member{
-				def:   &def,
-				index: memberIndex,
+	for _, entry := range entries {
+		embedded := []reflect.StructField{
+			{
+				Name: "Entry",
+				Type: reflect.TypeFor[internal.Entry[T]](),
 			},
-			raw: entry.Value,
 		}
 
-		def.values[memberIndex] = member
-		def.names[memberIndex] = entry.Name
+		enum := reflect.New(reflect.StructOf(embedded))
 
-		def.lookup[entry.Name] = memberIndex
+		member := internal.Entry[T]{}
+		internal.SetEntry(&member, entry.Name, entry.Value)
 
-		def.metadata[memberIndex] = internal.Metadata{
-			Name:  entry.Name,
-			Type:  class,
-			Value: reflect.ValueOf(member),
+		enum.FieldByName("Entry").Set(reflect.ValueOf(member))
+
+		field := reflect.StructField{
+			Name: entry.Name,
+			Type: class,
 		}
+
+		fields = append(fields, field)
 	}
 
-	registry.Lock()
-	defer registry.Unlock()
+	namespace := reflect.New(reflect.StructOf(fields)).Interface()
 
-	if _, exists := registry.data[class]; exists {
-		panic(fmt.Sprintf("enum has already been defined for %s", class))
-	}
-
-	registry.data[class] = &def
-
-	return Namespace{
-		definition: &def,
-	}
-}
-
-// Of loops through definition returns the an MemberAs enum that is equal to the comparable type T
-//
-// Panics if type is not registered
-func Of[T comparable](enum T) MemberAs[T] {
-	registry.RLock()
-	def, exists := registry.data[reflect.TypeFor[T]()]
-	registry.RUnlock()
-
-	if !exists {
-		panic(ErrNotDefined)
-	}
-
-	for e := range def.All() {
-		cnst, ok := e.(EnumAs[T])
-		if !ok {
-			panic(ErrInvalidEnumType)
-		}
-		if cnst.Raw() == enum {
-			return cnst.(MemberAs[T])
-		}
-	}
-	return MemberAs[T]{}
+	return Define[T](namespace)
 }
 
 // DefinitionFor returns the registered definition for an enum type
 //
 // Panics if type is not registered
-func DefinitionFor[T any]() Namespace {
+func DefinitionFor[T any]() Namespace[T] {
 	registry.RLock()
 	def, exists := registry.data[reflect.TypeFor[T]()]
 	registry.RUnlock()
@@ -181,8 +130,14 @@ func DefinitionFor[T any]() Namespace {
 		panic(ErrNotDefined)
 	}
 
-	return Namespace{
-		definition: def,
+	namespace, ok := def.(internal.Definition[T])
+
+	if !ok {
+		panic(ErrInvalidEnumType)
+	}
+
+	return Namespace[T]{
+		Definition: &namespace,
 	}
 }
 
@@ -195,150 +150,66 @@ func clearRegisteredNamespace[T any]() {
 // Equal reports whether a and b identify the same enum member.
 //
 // This is needed for when Enums contain non-comparable members
-func Equal(a, b Enum) bool {
+func Equal[T any](a, b Enum[T]) bool {
 	if !a.Valid() || !b.Valid() {
 		return false
 	}
 
-	return a.identity() == b.identity()
+	aEntry := internal.EntryAt(a.Namespace().identity(), a.Index())
+	bEntry := internal.EntryAt(b.Namespace().identity(), b.Index())
+
+	return internal.IdentityOf(aEntry) == internal.IdentityOf(bEntry)
 }
 
 // ByName returns the enum member by name.
 // Member zero value with false is returned if member name does not return initialized enum member
-func ByName[T any](namespace T, name string) (Enum, bool) {
+func ByName[T any](namespace Namespace[T], name string) (T, bool) {
 	registry.RLock()
 	defer registry.RUnlock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()].(internal.Definition[T])
 
 	if !ok {
-		return Member{}, false
+		return *new(T), false
 	}
 
 	return def.ByName(name)
 }
 
-// ByNameAs returns the enum member, cast to enum type, by name.
-func ByNameAs[E Enum, T any](namespace T, name string) (*E, error) {
-
-	namespaceType := reflect.TypeFor[T]()
-
-	registry.RLock()
-	def, ok := registry.data[namespaceType]
-	registry.RUnlock()
-
-	if !ok {
-		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
-	}
-
-	enum, ok := def.ByName(name)
-
-	if !ok {
-		return nil, ErrEnumNotFound
-	}
-
-	castEnum, ok := enum.(E)
-
-	if !ok {
-		return nil, fmt.Errorf("failed to cast %s to %s", def.memberType, reflect.TypeFor[E]())
-	}
-
-	return &castEnum, nil
-}
-
 // ByIndex returns the enum member by the index of its position in the enum list
-func ByIndex[T any](namespace T, index int) (Enum, bool) {
+func ByIndex[T any](namespace Namespace[T], index int) (T, bool) {
 	registry.RLock()
 	defer registry.RUnlock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()].(internal.Definition[T])
 
 	if !ok {
-		return Member{}, false
+		return *new(T), false
 	}
 
 	return def.ByIndex(index)
 }
 
-// ByIndexAs returns the enum member, cast to enum type, by the index of its position in the enum list
-func ByIndexAs[E Enum, T any](namespace T, index int) (*E, error) {
-
-	namespaceType := reflect.TypeFor[T]()
-
-	registry.RLock()
-	def, ok := registry.data[namespaceType]
-	registry.RUnlock()
-
-	if !ok {
-		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
-	}
-
-	enum, ok := def.ByIndex(index)
-
-	if !ok {
-		return nil, ErrEnumNotFound
-	}
-
-	castEnum, ok := enum.(E)
-
-	if !ok {
-		return nil, fmt.Errorf("failed to cast %s to %s", def.memberType, reflect.TypeFor[E]())
-	}
-
-	return &castEnum, nil
-}
-
 // Values returns a defensive copy of the definition's slice of Values
 //
 // an empty Member slice is returned for any internal error
-func Values[T any](namespace T) []Enum {
+func Values[T any](namespace Namespace[T]) []T {
 	registry.RLock()
 	defer registry.RUnlock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()].(internal.Definition[T])
 
 	if !ok {
-		return []Enum{}
+		return make([]T, 0)
 	}
 
 	return def.Values()
 }
 
-// ValuesAs returns a defensive copy of the definition's slice of Values each cast to enum type
-func ValuesAs[E Enum, T any](namespace T) ([]E, error) {
-
-	namespaceType := reflect.TypeFor[T]()
-	enumType := reflect.TypeFor[E]()
-
-	registry.RLock()
-	def, ok := registry.data[namespaceType]
-	registry.RUnlock()
-
-	if !ok {
-		return nil, fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
-	}
-
-	if def.memberType != enumType {
-		return nil, fmt.Errorf("failed to cast %s to %s", def.memberType, enumType)
-	}
-
-	arr := def.Values()
-
-	values := make([]E, len(arr))
-
-	for i, enum := range arr {
-		castEnum, _ := enum.(E)
-
-		values[i] = castEnum
-	}
-
-	return values, nil
-}
-
-// Values returns a defensive copy of the definition's slice of Names
+// Names returns a defensive copy of the definition's slice of Names
 //
 // an empty string slice is returned for any internal error
-func Names[T any](namespace T) []string {
+func Names[T any](namespace Namespace[T]) []string {
 	registry.RLock()
 	defer registry.RUnlock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()].(internal.Definition[T])
 
 	if !ok {
 		return []string{}
@@ -351,89 +222,36 @@ func Names[T any](namespace T) []string {
 // Yields Member
 //
 // No yield for any internal error
-func All[T any](namespace T) iter.Seq[Enum] {
+func All[T any](namespace Namespace[T]) iter.Seq[T] {
 	registry.RLock()
 	defer registry.RUnlock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()].(internal.Definition[T])
 
 	if !ok {
-		return func(yield func(Enum) bool) {}
+		return func(yield func(T) bool) {}
 	}
 
 	return def.All()
-}
-
-// AllAs provides iteration over all enum members.
-// Yields pointer for Member cast to enum type
-//
-// Yield error for any internal error
-func AllAs[E Enum, T any](namespace T) iter.Seq2[*E, error] {
-
-	namespaceType := reflect.TypeFor[T]()
-	enumType := reflect.TypeFor[E]()
-
-	registry.RLock()
-	def, ok := registry.data[namespaceType]
-	registry.RUnlock()
-
-	if !ok {
-		return func(yield func(*E, error) bool) {
-			err := fmt.Errorf("could not locate Namespace[%v] in registry", namespaceType.Name())
-			if !yield(nil, err) {
-				return
-			}
-		}
-	}
-
-	if def.memberType != enumType {
-		return func(yield func(*E, error) bool) {
-			err := fmt.Errorf("failed to cast %s to %s", def.memberType, enumType)
-			if !yield(nil, err) {
-				return
-			}
-		}
-	}
-
-	arr := make([]Enum, def.length)
-
-	copy(arr, def.Values())
-
-	return func(yield func(*E, error) bool) {
-		for _, enum := range arr {
-			castEnum, ok := enum.(E)
-
-			if !ok {
-				if !yield(nil, fmt.Errorf("failed to cast %s to %s", def.memberType, reflect.TypeFor[E]())) {
-					return
-				}
-				continue
-			}
-
-			if !yield(&castEnum, nil) {
-				return
-			}
-		}
-	}
 }
 
 // Entries provides iteration over all enum members.
 // Yields Member name and associated Member
 //
 // No yield for any internal error
-func Entries[T any](namespace T) iter.Seq2[string, Enum] {
+func Entries[T any](namespace Namespace[T]) iter.Seq2[string, T] {
 	registry.RLock()
 	defer registry.RUnlock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()].(internal.Definition[T])
 
 	if !ok {
-		return func(yield func(string, Enum) bool) {}
+		return func(yield func(string, T) bool) {}
 	}
 
 	return def.Entries()
 }
 
-func Decode[T Enum](namespace Namespace, enum *T, src any) error {
-	if namespace.EnumType() != reflect.TypeFor[T]() {
+func Decode[T Enum[T]](namespace Namespace[T], enum *T, src any) error {
+	if namespace.EntryType() != reflect.TypeFor[T]() {
 		return ErrInvalidEnumType
 	}
 
@@ -441,14 +259,5 @@ func Decode[T Enum](namespace Namespace, enum *T, src any) error {
 		return nil
 	}
 
-	var e Enum
-
-	err := namespace.Scan(&e, src)
-
-	if err != nil {
-		return err
-	}
-
-	*enum = e.(T)
-	return nil
+	return namespace.Scan(enum, src)
 }

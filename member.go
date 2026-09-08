@@ -7,91 +7,39 @@ package enum
 import (
 	"database/sql/driver"
 	"reflect"
+
+	"github.com/gibriil/enum/internal"
 )
 
-// Member is embedded in a struct to mark the struct type as an enum
+// Member is embedded in a struct to mark the struct type as an enum or is the internally created member for an Enum with an underlying type
 //
 // The zero value of Member is a nil definition signifying the enum is not initialized
-type Member struct {
-	def   *definition
-	index int
-}
-
-// MemberAs is the internally created member for an Enum with an underlying type
-//
-// The zero value of MemberAs is a nil definition signifying the enum is not initialized
-type MemberAs[T comparable] struct {
-	Member
-	raw T
-}
-
-// As is a package struct required for registering an underlying type as an Enum
-//
-// See DefineType
-type As[T comparable] struct {
-	Name  string
-	Value T
-}
-
-// initializer is a non-exported interface for reflection type safety
-type initializer interface {
-	initialize(*definition, int)
-}
-
-// initialize initializes the enum member with its namespace definition
-// and sets its position index in the list
-func (e *Member) initialize(def *definition, index int) {
-	e.def = def
-	e.index = index
-}
-
-// identity returns the comparable for enum equality checks
-func (e Member) identity() Member {
-	return e
-}
-
-// Name returns the enum member name
-func (e Member) Name() string {
-	if !e.Valid() {
-		return ""
-	}
-	return e.def.names[e.index]
-}
-
-// String returns the enum member name
-func (e Member) String() string {
-	if !e.Valid() {
-		return ""
-	}
-	return e.def.names[e.index]
-}
-
-// Index returns the index of member's position in the enum list
-func (e Member) Index() int {
-	return e.index
-}
-
-// Valid reports whether or not the enum has been initialized
-func (e Member) Valid() bool {
-	return e.def != nil
+type Member[T any] struct {
+	internal.Entry[T]
 }
 
 // MarshalText marshals the enum member name
-func (e Member) MarshalText() ([]byte, error) {
+func (e Member[T]) MarshalText() ([]byte, error) {
 	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
-	return []byte(e.def.names[e.index]), nil
+	return []byte(e.Name()), nil
 }
 
-// UnmarshalText un-marshals the data to an Enum with an underlying type
-func (e *MemberAs[T]) UnmarshalText(text []byte) error {
+// UnmarshalText un-marshals the data to an Enum
+func (e *Member[T]) UnmarshalText(text []byte) error {
 	registry.RLock()
-	namespace, ok := registry.data[reflect.TypeFor[T]()]
+	def, ok := registry.data[reflect.TypeFor[T]()]
 	registry.RUnlock()
 
 	if !ok {
 		return ErrNotDefined
+	}
+
+	namespace, ok := def.(internal.Definition[T])
+
+	if !ok {
+		return ErrInvalidEnumType
 	}
 
 	enum, ok := namespace.ByName(string(text))
@@ -100,49 +48,38 @@ func (e *MemberAs[T]) UnmarshalText(text []byte) error {
 		return ErrEnumNotFound
 	}
 
-	constEnum, ok := enum.(EnumAs[T])
-
-	*e = constEnum.(MemberAs[T])
+	*e = Member[T]{
+		Entry: enum,
+	}
 	return nil
 }
 
 // Value allows the driver to handle the name of the enum member
-func (e Member) Value() (driver.Value, error) {
+func (e Member[T]) Value() (driver.Value, error) {
 	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
-	return e.def.names[e.index], nil
-}
-
-// Value allows the driver to handle the value of the enum member with an underlying type
-func (e MemberAs[T]) Value() (driver.Value, error) {
-	if !e.Valid() {
-		return nil, ErrUninitialized
-	}
-	return e.raw, nil
+	return e.Entry.Value(), nil
 }
 
 // enum marks Member as a valid enum implementation.
 // It intentionally has no behavior; it seals the Enum interface.
-func (e Member) enum() {}
+func (e Member[T]) enum() {}
 
 // Namespace surfaces Enum Namespace with collection functions
-func (e Member) Namespace() Namespace {
+func (e Member[T]) Namespace() Namespace[T] {
 	if !e.Valid() {
-		return Namespace{}
+		return Namespace[T]{}
 	}
-	return Namespace{definition: e.def}
+	return Namespace[T]{
+		Definition: e.Definition(),
+	}
 }
 
 // Type returns the cached Type of Enum
-func (e Member) Type() reflect.Type {
+func (e Member[T]) Type() reflect.Type {
 	if !e.Valid() {
 		return nil
 	}
-	return e.def.memberType
-}
-
-// Raw returns the enums MemberAs raw value
-func (e MemberAs[T]) Raw() T {
-	return e.raw
+	return e.Definition().EntryType()
 }
