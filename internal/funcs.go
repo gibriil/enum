@@ -10,14 +10,13 @@ import (
 	"slices"
 )
 
-func SetEntry[T any](e *Entry[T], name string, value T) {
-	e.entryIdentity = entryIdentity[T]{
-		name: name,
+func NewRegistry() *Registry {
+	return &Registry{
+		data: map[reflect.Type]any{},
 	}
-	e.value = value
 }
 
-func InitializeDefinition[T any](id reflect.Type, name string) Definition[T] {
+func NewDefinition[T any](id reflect.Type, name string) Definition[T] {
 	return Definition[T]{
 		identity:  id,
 		name:      name,
@@ -25,7 +24,7 @@ func InitializeDefinition[T any](id reflect.Type, name string) Definition[T] {
 	}
 }
 
-func RegisterDefinition[T any](def *Definition[T], entries ...Entry[T]) {
+func PopulateDefinition[T any](def *Definition[T], entries ...Entry[T]) {
 	def.length = len(entries)
 	def.values = make([]Entry[T], def.length)
 	def.names = make([]string, def.length)
@@ -44,6 +43,17 @@ func AttachMetadata[T any](def *Definition[T], data ...Metadata) {
 	def.metadata = data
 }
 
+func RegisterDefinition[T any](r *Registry, def *Definition[T]) {
+	r.Lock()
+	defer r.Unlock()
+
+	if _, exists := r.data[def.identity]; exists {
+		panic(fmt.Sprintf("enum has already been defined for %s", def.identity))
+	}
+
+	r.data[def.identity] = &def
+}
+
 func Lookup[T any](def *Definition[T], name string) (Entry[T], bool) {
 	index, ok := def.lookup[name]
 	if !ok {
@@ -51,6 +61,13 @@ func Lookup[T any](def *Definition[T], name string) (Entry[T], bool) {
 	}
 
 	return def.values[index], ok
+}
+
+func SetEntry[T any](e *Entry[T], name string, value T) {
+	e.entryIdentity = entryIdentity[T]{
+		name: name,
+	}
+	e.value = value
 }
 
 func IdentityOf[T any](entry Entry[T]) entryIdentity[T] {

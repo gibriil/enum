@@ -137,3 +137,11 @@ func (def *Definition[T]) Type() reflect.Type {
 	}
 	return def.identity
 }
+
+// Name returns the Namespace Name
+func (def *Definition[T]) Name() string {
+	if def == nil {
+		return ""
+	}
+	return def.name
+}

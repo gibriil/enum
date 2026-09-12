@@ -3,7 +3,7 @@ package enum
 import "fmt"
 
 type Fruit struct {
-	Member
+	Member[Fruit]
 }
 
 var fruits = struct {
@@ -15,7 +15,7 @@ var fruits = struct {
 
 func Example() {
 
-	fruits = Define(fruits)
+	fruits = DefineNamespace[Fruit](fruits)
 
 	fmt.Printf("I like %ss, %ss, and %s", fruits.Banana, fruits.Coconut, fruits.Grapes)
 

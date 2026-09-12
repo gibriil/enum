@@ -6,9 +6,13 @@ package bitflag
 
 import "github.com/gibriil/enum/internal"
 
-type Store struct {
-	def   *internal.Definition
+type Store[T any] struct {
+	def   *internal.Definition[T]
 	state uint64
 }
 
-func (def definition) NewState()
+func (s Store[T]) NewState() Store[T] {
+	return Store[T]{
+		def: s.def,
+	}
+}

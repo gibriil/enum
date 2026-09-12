@@ -7,12 +7,13 @@ package enum
 import (
 	"database/sql/driver"
 	"encoding"
+	"reflect"
 	"testing"
 )
 
 // Declares type vehicle as an enum
 type vehicle struct {
-	Member
+	Member[vehicle]
 
 	Tires              int
 	Passengers         int
@@ -21,7 +22,7 @@ type vehicle struct {
 
 // Ensures event type satisfies Enum interface
 var (
-	_ Enum                   = vehicle{}
+	_ Enum[vehicle]          = vehicle{}
 	_ encoding.TextMarshaler = vehicle{}
 	_ driver.Valuer          = (*vehicle)(nil)
 )
@@ -51,8 +52,8 @@ var transportation = vehicles{
 }
 
 func TestEnhancedEnumVehicleTires(t *testing.T) {
-	clearRegisteredNamespace[vehicles]()
-	Vehicle := Define(transportation)
+	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
+	Vehicle := DefineNamespace[vehicle](transportation)
 
 	tireTests := []struct {
 		Name    string
@@ -78,8 +79,8 @@ func TestEnhancedEnumVehicleTires(t *testing.T) {
 }
 
 func TestEnhancedEnumVehiclePassengers(t *testing.T) {
-	clearRegisteredNamespace[vehicles]()
-	Vehicle := Define(transportation)
+	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
+	Vehicle := DefineNamespace[vehicle](transportation)
 
 	tireTests := []struct {
 		Name    string
@@ -105,8 +106,8 @@ func TestEnhancedEnumVehiclePassengers(t *testing.T) {
 }
 
 func TestEnhancedEnumVehicleCarbonPerKilometer(t *testing.T) {
-	clearRegisteredNamespace[vehicles]()
-	Vehicle := Define(transportation)
+	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
+	Vehicle := DefineNamespace[vehicle](transportation)
 
 	tireTests := []struct {
 		Name    string

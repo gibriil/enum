@@ -7,17 +7,18 @@ package enum
 import (
 	"database/sql/driver"
 	"encoding"
+	"reflect"
 	"testing"
 )
 
 // Declares type shipping as an enum
 type shipping struct {
-	Member
+	Member[shipping]
 }
 
 // Ensures event type satisfies Enum interface
 var (
-	_ Enum                   = shipping{}
+	_ Enum[shipping]         = shipping{}
 	_ encoding.TextMarshaler = shipping{}
 	_ driver.Valuer          = (*shipping)(nil)
 )
@@ -33,8 +34,8 @@ type carriers struct {
 
 // Test to ensure that driver.Value is the enum name
 func TestCarriers_Value(t *testing.T) {
-	clearRegisteredNamespace[carriers]()
-	carrier := Define(carriers{
+	registry.DeleteDefinition(reflect.TypeFor[carriers]())
+	carrier := DefineNamespace[shipping](carriers{
 		UPS:     shipping{},
 		USPS:    shipping{},
 		FedEx:   shipping{},

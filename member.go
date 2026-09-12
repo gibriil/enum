@@ -28,12 +28,10 @@ func (e Member[T]) MarshalText() ([]byte, error) {
 
 // UnmarshalText un-marshals the data to an Enum
 func (e *Member[T]) UnmarshalText(text []byte) error {
-	registry.RLock()
-	def, ok := registry.data[reflect.TypeFor[T]()]
-	registry.RUnlock()
+	def := registry.Lookup(reflect.TypeFor[T]())
 
-	if !ok {
-		return ErrNotDefined
+	if def == nil {
+		panic(ErrNotDefined)
 	}
 
 	namespace, ok := def.(internal.Definition[T])
@@ -42,14 +40,14 @@ func (e *Member[T]) UnmarshalText(text []byte) error {
 		return ErrInvalidEnumType
 	}
 
-	enum, ok := namespace.ByName(string(text))
+	entry, ok := internal.Lookup(&namespace, string(text))
 
 	if !ok {
 		return ErrEnumNotFound
 	}
 
 	*e = Member[T]{
-		Entry: enum,
+		Entry: entry,
 	}
 	return nil
 }
@@ -82,4 +80,9 @@ func (e Member[T]) Type() reflect.Type {
 		return nil
 	}
 	return e.Definition().EntryType()
+}
+
+// Raw returns the enums MemberAs raw value
+func (e Member[T]) Raw() T {
+	return e.Entry.Value()
 }

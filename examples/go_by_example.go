@@ -15,7 +15,7 @@ const (
 	StateRetrying
 )
 
-var ServerStates = enum.DefineType(
+var ServerStates, schema = enum.DefineType(
 	enum.As[ServerState]{Name: "idle", Value: StateIdle},
 	enum.As[ServerState]{Name: "connected", Value: StateConnected},
 	enum.As[ServerState]{Name: "error", Value: StateError},
@@ -35,7 +35,7 @@ func main() {
 	fmt.Println(ns2)
 }
 
-func transition(s enum.EnumAs[ServerState]) ServerState {
+func transition(s enum.Member[ServerState]) ServerState {
 	switch s.Raw() {
 	case StateIdle:
 		return StateConnected

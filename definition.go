@@ -5,19 +5,11 @@
 package enum
 
 import (
-	"reflect"
-	"sync"
-
 	"github.com/gibriil/enum/internal"
 )
 
 // Registry is a key:value store for reflection caching
-var registry = struct {
-	sync.RWMutex
-	data map[reflect.Type]any
-}{
-	data: map[reflect.Type]any{},
-}
+var registry = internal.NewRegistry()
 
 type Namespace[T any] struct {
 	*internal.Definition[T]

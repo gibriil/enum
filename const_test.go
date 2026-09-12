@@ -19,10 +19,8 @@ const (
 	stateRetrying
 )
 
-var serverStates enum.Namespace
-
 func init() {
-	serverStates = enum.DefineType(
+	_, _ = enum.DefineType(
 		enum.As[serverState]{Name: "idle", Value: stateIdle},
 		enum.As[serverState]{Name: "connected", Value: stateConnected},
 		enum.As[serverState]{Name: "error", Value: stateError},
@@ -37,7 +35,7 @@ func TestConstHasEnum(t *testing.T) {
 		}
 	}()
 
-	_ = enum.DefinitionFor[serverState]()
+	_, _ = enum.DefinitionFor[serverState]()
 }
 
 func TestEnumEqualsConst(t *testing.T) {
@@ -47,17 +45,17 @@ func TestEnumEqualsConst(t *testing.T) {
 		}
 	}()
 
-	if e := enum.Of(stateIdle); e.Raw() != stateIdle {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateIdle)
+	if e := enum.Of(stateIdle); e.Entry.Value() != stateIdle {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateIdle)
 	}
-	if e := enum.Of(stateConnected); e.Raw() != stateConnected {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateConnected)
+	if e := enum.Of(stateConnected); e.Entry.Value() != stateConnected {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateConnected)
 	}
-	if e := enum.Of(stateError); e.Raw() != stateError {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateError)
+	if e := enum.Of(stateError); e.Entry.Value() != stateError {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateError)
 	}
-	if e := enum.Of(stateRetrying); e.Raw() != stateRetrying {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateRetrying)
+	if e := enum.Of(stateRetrying); e.Entry.Value() != stateRetrying {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateRetrying)
 	}
 
 }
@@ -71,7 +69,7 @@ func TestMemberAs(t *testing.T) {
 		stopped
 	)
 
-	states := enum.DefineType(
+	states, _ := enum.DefineType(
 		enum.As[state]{Name: "idle", Value: idle},
 		enum.As[state]{Name: "running", Value: running},
 		enum.As[state]{Name: "stopped", Value: stopped},
@@ -83,8 +81,8 @@ func TestMemberAs(t *testing.T) {
 		t.Fatal("Of(running) returned invalid enum")
 	}
 
-	if got.Raw() != running {
-		t.Fatalf("Raw() = %v, want %v", got.Raw(), running)
+	if got.Entry.Value() != running {
+		t.Fatalf("Value() = %v, want %v", got.Entry.Value(), running)
 	}
 
 	if got.Name() != "running" {
@@ -95,7 +93,9 @@ func TestMemberAs(t *testing.T) {
 		t.Fatalf("Index() = %d, want 1", got.Index())
 	}
 
-	if !enum.Equal(got, states.Values()[1]) {
+	try := enum.Of(states.Values()[1])
+
+	if !enum.Equal(got, try) {
 		t.Fatal("Of(running) did not identify the registered member")
 	}
 }

@@ -4,28 +4,16 @@
 
 package bitflag
 
-type Option struct {
-	def   *definition
-	index int
-	mask  uint64
-}
+import "github.com/gibriil/enum/internal"
 
-// initializer is a non-exported interface for reflection type safety
-type initializer interface {
-	initialize(*definition, int, uint64)
-}
-
-// initialize initializes the flag option with its closed set definition
-// and sets its position index in the list
-func (f *Option) initialize(def *definition, index int, mask uint64) {
-	f.def = def
-	f.index = index
-	f.mask = mask
+type Option[T any] struct {
+	internal.Entry[T]
+	mask uint64
 }
 
 // flag marks Option as a valid flag implementation.
 // It intentionally has no behavior; it seals the Flag interface.
-func (f Option) flag() {}
+func (f Option[T]) flag() {}
 
 type Flag interface {
 	flag()

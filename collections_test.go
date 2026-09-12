@@ -14,7 +14,7 @@ import (
 )
 
 type role struct {
-	enum.Member
+	enum.Member[role]
 
 	// Scope defines the allowed resources or endpoints.
 	Scope []string
@@ -25,76 +25,77 @@ type role struct {
 
 // Ensures role type satisfies Enum interface
 var (
-	_ enum.Enum              = role{}
+	_ enum.Enum[role]        = role{}
 	_ encoding.TextMarshaler = role{}
 	_ driver.Valuer          = (*role)(nil)
 )
 
 // AccessControl groups role assignments
-var accessControl = struct {
+type accessControl struct {
 	User    role
 	Guest   role
 	Admin   role
 	Manager role
 	Viewer  role
-}{
-	// Admin: full access
-	Admin: role{
-		Scope: []string{"read", "write", "delete", "admin"},
-		Permissions: map[string]string{
-			"users":        "full",
-			"applications": "manage",
-			"reports":      "export",
-			"settings":     "configure",
-		},
-	},
-
-	// User: standard access
-	User: role{
-		Scope: []string{"read", "write"},
-		Permissions: map[string]string{
-			"users":        "read",
-			"applications": "access",
-			"reports":      "view",
-		},
-	},
-
-	// Manager: team oversight
-	Manager: role{
-		Scope: []string{"read", "write", "review"},
-		Permissions: map[string]string{
-			"users":        "read,write",
-			"applications": "assign",
-			"reports":      "view,export",
-			"team":         "manage",
-		},
-	},
-
-	// Viewer: read-only access
-	Viewer: role{
-		Scope: []string{"read"},
-		Permissions: map[string]string{
-			"users":        "read",
-			"applications": "view",
-			"reports":      "view",
-		},
-	},
-
-	// Guest: minimal access
-	Guest: role{
-		Scope: []string{"read"},
-		Permissions: map[string]string{
-			"applications": "view",
-		},
-	},
 }
 
 func init() {
-	accessControl = enum.Define(accessControl)
+	enum.DefineNamespace[role](accessControl{
+		// Admin: full access
+		Admin: role{
+			Scope: []string{"read", "write", "delete", "admin"},
+			Permissions: map[string]string{
+				"users":        "full",
+				"applications": "manage",
+				"reports":      "export",
+				"settings":     "configure",
+			},
+		},
+
+		// User: standard access
+		User: role{
+			Scope: []string{"read", "write"},
+			Permissions: map[string]string{
+				"users":        "read",
+				"applications": "access",
+				"reports":      "view",
+			},
+		},
+
+		// Manager: team oversight
+		Manager: role{
+			Scope: []string{"read", "write", "review"},
+			Permissions: map[string]string{
+				"users":        "read,write",
+				"applications": "assign",
+				"reports":      "view,export",
+				"team":         "manage",
+			},
+		},
+
+		// Viewer: read-only access
+		Viewer: role{
+			Scope: []string{"read"},
+			Permissions: map[string]string{
+				"users":        "read",
+				"applications": "view",
+				"reports":      "view",
+			},
+		},
+
+		// Guest: minimal access
+		Guest: role{
+			Scope: []string{"read"},
+			Permissions: map[string]string{
+				"applications": "view",
+			},
+		},
+	})
 }
 
 func TestCollectionEquality(t *testing.T) {
-
+	_, schema := enum.DefinitionFor[accessControl]()
+	accessControl := schema.(accessControl)
 	if enum.Equal(accessControl.Admin, accessControl.Guest) {
 		t.Errorf("accessControl.Admin should not equal accessControl.Guest")
 	}
@@ -105,6 +106,8 @@ func TestCollectionEquality(t *testing.T) {
 }
 
 func TestCollectionsByName(t *testing.T) {
+	namespace, schema := enum.DefinitionFor[role]()
+	accessControl := schema.(accessControl)
 	tests := []struct {
 		Name   string
 		Lookup string
@@ -132,7 +135,7 @@ func TestCollectionsByName(t *testing.T) {
 		}
 		for _, v := range variations {
 			t.Run(test.Name+"/"+v.Name, func(t *testing.T) {
-				got, ok := enum.ByName(accessControl, v.Lookup)
+				got, ok := enum.ByName(namespace, v.Lookup)
 				if ok != v.wantOk {
 					t.Fatalf("ByName(%q): ok=%v, want %v", v.Lookup, ok, v.wantOk)
 				}
@@ -151,6 +154,9 @@ func TestCollectionsByName(t *testing.T) {
 }
 
 func TestCollectionsByIndex(t *testing.T) {
+	namespace, schema := enum.DefinitionFor[role]()
+	accessControl := schema.(accessControl)
+
 	tests := []struct {
 		Name   string
 		Index  int
@@ -162,12 +168,12 @@ func TestCollectionsByIndex(t *testing.T) {
 		{"Admin", 2, accessControl.Admin, true},
 		{"Manager", 3, accessControl.Manager, true},
 		{"Viewer", 4, accessControl.Viewer, true},
-		{"TooHigh", len(enum.Values(accessControl)), role{}, false},
+		{"TooHigh", len(enum.Values(namespace)), role{}, false},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			got, ok := enum.ByIndex(accessControl, test.Index)
+			got, ok := enum.ByIndex(namespace, test.Index)
 			if ok != test.wantOk {
 				t.Fatalf("ByIndex(%d): ok=%v, want %v", test.Index, ok, test.wantOk)
 			}
@@ -185,6 +191,9 @@ func TestCollectionsByIndex(t *testing.T) {
 }
 
 func TestCollectionsValues(t *testing.T) {
+	namespace, schema := enum.DefinitionFor[role]()
+	accessControl := schema.(accessControl)
+
 	tests := []struct {
 		Name   string
 		Want   role
@@ -197,7 +206,7 @@ func TestCollectionsValues(t *testing.T) {
 		{"Viewer", accessControl.Viewer, true},
 	}
 
-	members := enum.Values(accessControl)
+	members := enum.Values(namespace)
 
 	if len(members) != len(tests) {
 		t.Fatalf("unexpected Values length: got %d, want %d", len(tests), len(members))
@@ -214,6 +223,9 @@ func TestCollectionsValues(t *testing.T) {
 }
 
 func TestCollectionsNames(t *testing.T) {
+	namespace, schema := enum.DefinitionFor[role]()
+	accessControl := schema.(accessControl)
+
 	tests := []struct {
 		Name   string
 		Want   role
@@ -226,7 +238,7 @@ func TestCollectionsNames(t *testing.T) {
 		{"Viewer", accessControl.Viewer, true},
 	}
 
-	members := enum.Names(accessControl)
+	members := enum.Names(namespace)
 
 	if len(members) != len(tests) {
 		t.Fatalf("unexpected Names length: got %d, want %d", len(tests), len(members))
@@ -244,6 +256,9 @@ func TestCollectionsNames(t *testing.T) {
 }
 
 func TestCollectionsAll(t *testing.T) {
+	namespace, schema := enum.DefinitionFor[role]()
+	accessControl := schema.(accessControl)
+
 	tests := []struct {
 		Name   string
 		Want   role
@@ -256,7 +271,7 @@ func TestCollectionsAll(t *testing.T) {
 		{"Viewer", accessControl.Viewer, true},
 	}
 
-	for e := range enum.All(accessControl) {
+	for e := range enum.All(namespace) {
 		t.Run(e.Name(), func(t *testing.T) {
 			if !enum.Equal(e, tests[e.Index()].Want) {
 				t.Errorf("iteration did not yield expected enum: got %s, want %s", e, tests[e.Index()].Want)
@@ -266,6 +281,9 @@ func TestCollectionsAll(t *testing.T) {
 }
 
 func TestCollectionsEntries(t *testing.T) {
+	namespace, schema := enum.DefinitionFor[role]()
+	accessControl := schema.(accessControl)
+
 	tests := []struct {
 		Name   string
 		Want   role
@@ -278,7 +296,7 @@ func TestCollectionsEntries(t *testing.T) {
 		{"Viewer", accessControl.Viewer, true},
 	}
 
-	for name, e := range enum.Entries(accessControl) {
+	for name, e := range enum.Entries(namespace) {
 		t.Run(name, func(t *testing.T) {
 			if !enum.Equal(e, tests[e.Index()].Want) {
 				t.Errorf("iteration did not yield expected enum: got %s, want %s", e, tests[e.Index()].Want)
