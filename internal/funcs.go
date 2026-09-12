@@ -44,8 +44,13 @@ func AttachMetadata[T any](def *Definition[T], data ...Metadata) {
 	def.metadata = data
 }
 
-func EntryAt[T any](def *Definition[T], index int) Entry[T] {
-	return def.values[index]
+func Lookup[T any](def *Definition[T], name string) (Entry[T], bool) {
+	index, ok := def.lookup[name]
+	if !ok {
+		return *new(Entry[T]), ok
+	}
+
+	return def.values[index], ok
 }
 
 func IdentityOf[T any](entry Entry[T]) entryIdentity[T] {

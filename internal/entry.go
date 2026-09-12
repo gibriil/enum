@@ -18,7 +18,7 @@ var (
 
 type Entry[T any] struct {
 	entryIdentity[T]
-	value T
+	value any
 }
 
 type entryIdentity[T any] struct {
@@ -73,7 +73,7 @@ func (e Entry[T]) Index() int {
 
 // Value returns the concrete value of the entry's type
 func (e Entry[T]) Value() T {
-	return e.value
+	return e.value.(T)
 }
 
 // Definition returns the internally registered definition for a collection of entries

@@ -44,7 +44,7 @@ func (def *Definition[T]) ByName(name string) (T, bool) {
 		return *new(T), false
 	}
 
-	return def.values[index].value, true
+	return def.values[index].Value(), true
 }
 
 // ByIndex returns the Entry by the index of its position in the list
@@ -56,7 +56,7 @@ func (def *Definition[T]) ByIndex(index int) (T, bool) {
 	if index < 0 || index >= def.Len() {
 		return *new(T), false
 	}
-	return def.values[index].value, true
+	return def.values[index].Value(), true
 }
 
 // Values returns a defensive copy of the definition's slice of Values
@@ -66,7 +66,7 @@ func (def *Definition[T]) Values() []T {
 	}
 	out := make([]T, def.length)
 	for i, val := range def.values {
-		out[i] = val.value
+		out[i] = val.Value()
 	}
 	return out
 }
@@ -90,7 +90,7 @@ func (def *Definition[T]) All() iter.Seq[T] {
 
 	return func(yield func(T) bool) {
 		for _, entry := range def.values {
-			if !yield(entry.value) {
+			if !yield(entry.Value()) {
 				return
 			}
 		}
@@ -105,7 +105,7 @@ func (def *Definition[T]) Entries() iter.Seq2[string, T] {
 	}
 	return func(yield func(string, T) bool) {
 		for i := 0; i < def.length; i++ {
-			if !yield(def.names[i], def.values[i].value) {
+			if !yield(def.names[i], def.values[i].Value()) {
 				return
 			}
 		}
