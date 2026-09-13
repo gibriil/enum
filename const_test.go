@@ -35,7 +35,7 @@ func TestConstHasEnum(t *testing.T) {
 		}
 	}()
 
-	_, _ = enum.DefinitionFor[serverState]()
+	_ = enum.DefinitionFor[serverState, serverState]()
 }
 
 func TestEnumEqualsConst(t *testing.T) {

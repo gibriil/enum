@@ -6,6 +6,7 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"sync"
 )
@@ -33,4 +34,15 @@ func (r *Registry) DeleteDefinition(key reflect.Type) {
 	r.Lock()
 	defer r.Unlock()
 	delete(r.data, key)
+}
+
+func RegisterDefinition[T any](r *Registry, def *Definition[T]) {
+	r.Lock()
+	defer r.Unlock()
+
+	if _, exists := r.data[def.identity]; exists {
+		panic(fmt.Sprintf("enum has already been defined for %s", def.identity))
+	}
+
+	r.data[def.identity] = def
 }

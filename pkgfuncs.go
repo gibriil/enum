@@ -48,6 +48,8 @@ func DefineNamespace[T any, S any](schema S) S {
 
 		internal.InitializeEntry(&embedded, field.Name, &def, entryIndex)
 
+		member.FieldByName("Entry").Set(reflect.ValueOf(embedded))
+
 		internal.InitializeEntryValue(&embedded, member.Interface().(T))
 
 		member.FieldByName("Entry").Set(reflect.ValueOf(embedded))
@@ -133,22 +135,22 @@ func DefineType[T comparable](members ...As[T]) (namespace Namespace[T], schema 
 // DefinitionFor returns the registered definition for an enum type
 //
 // Panics if type is not registered
-func DefinitionFor[T any]() (Namespace[T], any) {
-	def := registry.Lookup(reflect.TypeFor[T]())
+func DefinitionFor[E, S any]() Namespace[E] {
+	def := registry.Lookup(reflect.TypeFor[S]())
 
 	if def == nil {
 		panic(ErrNotDefined)
 	}
 
-	namespace, ok := def.(internal.Definition[T])
+	namespace, ok := def.(*internal.Definition[E])
 
 	if !ok {
 		panic(ErrInvalidEnumType)
 	}
 
-	return Namespace[T]{
-		Definition: &namespace,
-	}, namespace.Type().Elem()
+	return Namespace[E]{
+		Definition: namespace,
+	}
 }
 
 // Equal reports whether a and b identify the same enum member.
@@ -176,7 +178,7 @@ func Equal[T any](a, b Enum[T]) bool {
 // ByName returns the enum member by name.
 // Member zero value with false is returned if member name does not return initialized enum member
 func ByName[T any](namespace Namespace[T], name string) (T, bool) {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	def, ok := registry.Lookup(namespace.Type()).(*internal.Definition[T])
 
 	if !ok {
 		return *new(T), false
@@ -187,7 +189,7 @@ func ByName[T any](namespace Namespace[T], name string) (T, bool) {
 
 // ByIndex returns the enum member by the index of its position in the enum list
 func ByIndex[T any](namespace Namespace[T], index int) (T, bool) {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	def, ok := registry.Lookup(namespace.Type()).(*internal.Definition[T])
 
 	if !ok {
 		return *new(T), false
@@ -200,7 +202,7 @@ func ByIndex[T any](namespace Namespace[T], index int) (T, bool) {
 //
 // an empty Member slice is returned for any internal error
 func Values[T any](namespace Namespace[T]) []T {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	def, ok := registry.Lookup(namespace.Type()).(*internal.Definition[T])
 
 	if !ok {
 		return make([]T, 0)
@@ -213,7 +215,7 @@ func Values[T any](namespace Namespace[T]) []T {
 //
 // an empty string slice is returned for any internal error
 func Names[T any](namespace Namespace[T]) []string {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	def, ok := registry.Lookup(namespace.Type()).(*internal.Definition[T])
 
 	if !ok {
 		return []string{}
@@ -227,7 +229,7 @@ func Names[T any](namespace Namespace[T]) []string {
 //
 // No yield for any internal error
 func All[T any](namespace Namespace[T]) iter.Seq[T] {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	def, ok := registry.Lookup(namespace.Type()).(*internal.Definition[T])
 
 	if !ok {
 		return func(yield func(T) bool) {}
@@ -241,7 +243,7 @@ func All[T any](namespace Namespace[T]) iter.Seq[T] {
 //
 // No yield for any internal error
 func Entries[T any](namespace Namespace[T]) iter.Seq2[string, T] {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	def, ok := registry.Lookup(namespace.Type()).(*internal.Definition[T])
 
 	if !ok {
 		return func(yield func(string, T) bool) {}

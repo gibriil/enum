@@ -46,17 +46,6 @@ func AttachMetadata[T any](def *Definition[T], data ...Metadata) {
 	def.metadata = data
 }
 
-func RegisterDefinition[T any](r *Registry, def *Definition[T]) {
-	r.Lock()
-	defer r.Unlock()
-
-	if _, exists := r.data[def.identity]; exists {
-		panic(fmt.Sprintf("enum has already been defined for %s", def.identity))
-	}
-
-	r.data[def.identity] = &def
-}
-
 func Lookup[T any](def *Definition[T], name string) (Entry[T], bool) {
 	index, ok := def.lookup[name]
 	if !ok {
