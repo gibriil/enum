@@ -11,13 +11,16 @@ import (
 	"sync"
 )
 
+// ErrNoRegistry reports that a registry receiver has not been initialized.
 var ErrNoRegistry = errors.New("registry is not initialized")
 
+// Registry stores definitions keyed by reflection type.
 type Registry struct {
 	sync.RWMutex
 	data map[reflect.Type]any
 }
 
+// Lookup returns the value registered for key, or nil when key is absent.
 func (r *Registry) Lookup(key reflect.Type) any {
 	if r == nil {
 		panic(ErrNoRegistry)
@@ -27,6 +30,7 @@ func (r *Registry) Lookup(key reflect.Type) any {
 	return r.data[key]
 }
 
+// DeleteDefinition removes the definition registered for key.
 func (r *Registry) DeleteDefinition(key reflect.Type) {
 	if r == nil {
 		panic(ErrNoRegistry)
@@ -36,6 +40,7 @@ func (r *Registry) DeleteDefinition(key reflect.Type) {
 	delete(r.data, key)
 }
 
+// RegisterDefinition registers def under its definition identity.
 func RegisterDefinition[T any](r *Registry, def *Definition[T]) {
 	r.Lock()
 	defer r.Unlock()

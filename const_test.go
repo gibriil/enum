@@ -10,8 +10,10 @@ import (
 	"github.com/gibriil/enum"
 )
 
+// serverState is the underlying type used by the package-level constant tests.
 type serverState int
 
+// Server-state constants registered with DefineType.
 const (
 	stateIdle serverState = iota
 	stateConnected
@@ -19,6 +21,7 @@ const (
 	stateRetrying
 )
 
+// init registers the package-level server-state definition.
 func init() {
 	_ = enum.DefineType(
 		enum.As[serverState]{Name: "idle", Value: stateIdle},
@@ -28,6 +31,7 @@ func init() {
 	)
 }
 
+// TestConstHasEnum verifies that the constant definition can be retrieved.
 func TestConstHasEnum(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -38,6 +42,7 @@ func TestConstHasEnum(t *testing.T) {
 	_ = enum.DefinitionFor[serverState, serverState]()
 }
 
+// TestEnumEqualsConst verifies lookup of registered underlying values.
 func TestEnumEqualsConst(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -60,6 +65,7 @@ func TestEnumEqualsConst(t *testing.T) {
 
 }
 
+// TestMemberAs verifies the Member wrapper returned for type-backed values.
 func TestMemberAs(t *testing.T) {
 	type state uint8
 

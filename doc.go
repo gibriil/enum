@@ -3,72 +3,89 @@
 // license that can be found in the LICENSE file.
 
 /*
-Package enum provides a standard enum interface for creating a list of enums. Enums are indexed, iterable, and namespaced.
+Package enum provides indexed, named, and iterable enum definitions.
 
-Flags or flag based enums are still best handled by [Iota]
+There are two ways to define an enum:
 
-# Basic Enum
+  - DefineNamespace creates a namespace from a struct whose fields are enum values.
+  - DefineType creates a namespace for comparable values such as integer-based constants.
 
-Declare an Enum type by embedding Member in a struct.
+Flags and flag-based values are still best handled with `iota`.
+
+# Struct-backed enums
+
+Embed Member in the enum value type and declare a namespace containing its members.
 
 	type Color struct {
-		enum.Member
+		enum.Member[Color]
 	}
-
-This enum type can now be used to create an Enum list or namespace.
 
 	type Colors struct {
-		Red Color
+		Red   Color
 		Green Color
-		Blue Color
+		Blue  Color
 	}
 
-The enums can now be initialized by passing your struct to the Define function.
+	var colors = enum.DefineNamespace[Color](Colors{})
+	var colorNamespace = enum.DefinitionFor[Color, Colors]()
 
-	Colors := enum.Define(Colors{})
+DefineNamespace initializes the enum fields and returns the initialized schema. Use
+DefinitionFor when you need the namespace for lookups, iteration, scanning, or
+metadata.
 
-# Enhanced Enum
-
-Because an enum is just a struct, we can build enhanced enums that carry additional data.
+Enum values can carry additional data. The embedded Member is initialized along
+with the other fields.
 
 	type Vehicle struct {
-		enum.Member
+		enum.Member[Vehicle]
 
-		Tires int
-		Passengers int
+		Tires              int
+		Passengers         int
 		CarbonPerKilometer int
 	}
 
-These are identical to our basic enum in every other way.
-
-Create an Enum list or namespace.
-
 	type Vehicles struct {
-		Car Vehicle
-		Bus Vehicle
+		Car     Vehicle
+		Bus     Vehicle
 		Bicycle Vehicle
 	}
 
-The additional data can then be populated with their non-zero values when passing the struct declaration to Define.
-
-	Vehicle := enum.Define(Vehicles{
-		Car: Vehicle{
-			Tires: 4,
-			Passengers: 5,
-			CarbonPerKilometer: 400,
-		},
-		Bus: Vehicle{
-			Tires: 6,
-			Passengers: 50,
-			CarbonPerKilometer: 800,
-		},
-		Bicycle: Vehicle{
-			Tires: 2,
-			Passengers: 1,
-			CarbonPerKilometer: 0,
-		},
+	var vehicles = enum.DefineNamespace[Vehicle](Vehicles{
+		Car:     Vehicle{Tires: 4, Passengers: 5, CarbonPerKilometer: 400},
+		Bus:     Vehicle{Tires: 6, Passengers: 50, CarbonPerKilometer: 800},
+		Bicycle: Vehicle{Tires: 2, Passengers: 1},
 	})
 
-Because package enum uses reflection to initialize, it may be advisable to declare your list globally and pass it to Define in the init function
+# Type-backed enums
+
+DefineType registers comparable values under names and returns their namespace.
+
+	type State uint8
+
+	const (
+		StateIdle State = iota
+		StateRunning
+		StateStopped
+	)
+
+	var states = enum.DefineType(
+		enum.As[State]{Name: "idle", Value: StateIdle},
+		enum.As[State]{Name: "running", Value: StateRunning},
+		enum.As[State]{Name: "stopped", Value: StateStopped},
+	)
+
+	current := enum.Of(StateRunning)
+	_ = current.Name()
+
+The Member returned by Of exposes the registered name, index, namespace, and
+underlying value through Raw.
+
+# Text and database decoding
+
+Member implements text marshaling and database value conversion for initialized
+members. Decoding is namespace-specific because the same enum type may be used
+in more than one namespace. Use Namespace.UnmarshalText or Namespace.Scan from
+the namespace that should resolve the name. A nil scan source resets the target
+to its zero value.
 */
 package enum

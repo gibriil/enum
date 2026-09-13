@@ -11,19 +11,19 @@ import (
 	"testing"
 )
 
-// Declares type shipping as an enum
+// shipping is a basic enum value used for database integration tests.
 type shipping struct {
 	Member[shipping]
 }
 
-// Ensures event type satisfies Enum interface
+// Compile-time interface checks for shipping's enum and database integrations.
 var (
 	_ Enum[shipping]         = shipping{}
 	_ encoding.TextMarshaler = shipping{}
 	_ driver.Valuer          = (*shipping)(nil)
 )
 
-// Carriers list for shipping enums
+// carriers is the namespace used by the database value tests.
 type carriers struct {
 	UPS     shipping
 	USPS    shipping
@@ -32,7 +32,7 @@ type carriers struct {
 	Digital shipping
 }
 
-// Test to ensure that driver.Value is the enum name
+// TestCarriers_Value verifies that initialized members return their names to database drivers.
 func TestCarriers_Value(t *testing.T) {
 	registry.DeleteDefinition(reflect.TypeFor[carriers]())
 	carrier := DefineNamespace[shipping](carriers{

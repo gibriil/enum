@@ -14,14 +14,14 @@ import (
 	"github.com/gibriil/enum/internal"
 )
 
-// DefineNamespace registers the struct enum namespace and uses reflection over
-// the struct fields to initialize each enum member
+// DefineNamespace registers a struct-backed enum namespace and initializes
+// each field whose type implements Enum[T]. It returns the initialized schema.
 func DefineNamespace[T any, S any](schema S) S {
 
 	class := reflect.TypeFor[S]()
 
 	if class.Kind() != reflect.Struct {
-		panic("enum.Define requires a struct")
+		panic("enum.DefineNamespace requires a struct")
 	}
 
 	def := internal.NewDefinition[T](class, class.Name())
@@ -78,7 +78,7 @@ func DefineNamespace[T any, S any](schema S) S {
 	return schema
 }
 
-// DefineType registers a comparable type into a Namespace and initializes each enum member
+// DefineType registers named comparable values and returns their Namespace.
 func DefineType[T comparable](members ...As[T]) Namespace[T] {
 
 	class := reflect.TypeFor[T]()
@@ -152,10 +152,9 @@ func DefinitionFor[E, S any]() Namespace[E] {
 	}
 }
 
-// Equal reports whether a and b identify the same enum member.
-//
-// This is needed for when Enums contain non-comparable members.
-// An error will return false
+// Equal reports whether a and b identify the same registered enum member.
+// It returns false for uninitialized values, missing members, or members from
+// different definitions.
 func Equal[T any](a, b Enum[T]) bool {
 	if !a.Valid() || !b.Valid() {
 		return false
@@ -223,8 +222,7 @@ func Names[T any](namespace Namespace[T]) []string {
 	return def.Names()
 }
 
-// All provides iteration over all enum members.
-// Yields Member
+// All provides iteration over all enum members in definition order.
 //
 // No yield for any internal error
 func All[T any](namespace Namespace[T]) iter.Seq[T] {
@@ -237,8 +235,7 @@ func All[T any](namespace Namespace[T]) iter.Seq[T] {
 	return def.All()
 }
 
-// Entries provides iteration over all enum members.
-// Yields Member name and associated Member
+// Entries provides iteration over member names and values in definition order.
 //
 // No yield for any internal error
 func Entries[T any](namespace Namespace[T]) iter.Seq2[string, T] {
@@ -251,6 +248,8 @@ func Entries[T any](namespace Namespace[T]) iter.Seq2[string, T] {
 	return def.Entries()
 }
 
+// Decode decodes a source value into an enum using namespace. It accepts the
+// same source forms as Namespace.Scan.
 func Decode[T Enum[T]](namespace Namespace[T], enum *T, src any) error {
 	if enum == nil {
 		return ErrUninitialized
@@ -267,7 +266,8 @@ func Decode[T Enum[T]](namespace Namespace[T], enum *T, src any) error {
 	return namespace.Scan(enum, src)
 }
 
-// Of loops through definition entries and returns the Member enum that is equal to the comparable type T
+// Of returns the registered member whose underlying value equals enum. It
+// returns an uninitialized Member when no matching value is registered.
 func Of[T comparable](enum T) Member[T] {
 	registration := registry.Lookup(reflect.TypeFor[T]())
 

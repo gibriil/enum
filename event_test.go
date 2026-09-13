@@ -11,26 +11,27 @@ import (
 	"testing"
 )
 
-// Declares type event as an enum
+// event is an enhanced enum carrying arbitrary event details.
 type event struct {
 	Member[event]
 
 	Detail any
 }
 
-// Ensures event type satisfies Enum interface
+// Compile-time interface checks for event's enum and database integrations.
 var (
 	_ Enum[event]            = event{}
 	_ encoding.TextMarshaler = event{}
 	_ driver.Valuer          = (*event)(nil)
 )
 
-// KeyboardEvent namespace for event enums
+// keyboardEvents is one namespace for event values.
 type keyboardEvents struct {
 	Enter event
 	Focus event
 }
 
+// keyboardEvent contains the initial keyboard event definitions.
 var keyboardEvent = keyboardEvents{
 	Enter: event{
 		Detail: map[string]any{
@@ -44,12 +45,13 @@ var keyboardEvent = keyboardEvents{
 	},
 }
 
-// WindowEvent namespace for event enums
+// windowEvents is a separate namespace for the same event type.
 type windowEvents struct {
 	Move  event
 	Focus event
 }
 
+// windowEvent contains the initial window event definitions.
 var windowEvent = windowEvents{
 	Move: event{
 		Detail: map[string]any{
@@ -63,8 +65,8 @@ var windowEvent = windowEvents{
 	},
 }
 
-// Test to ensure that enum at position 0 of one namespace is not equal
-// an enum at position 0 of another namespace
+// TestEventNamespacesMembersAreDistinct verifies that equal positions in
+// different namespaces still represent different members.
 func TestEventNamespacesMembersAreDistinct(t *testing.T) {
 	registry.DeleteDefinition(reflect.TypeFor[windowEvents]())
 	windowEvent = DefineNamespace[event](windowEvent)
@@ -80,8 +82,8 @@ func TestEventNamespacesMembersAreDistinct(t *testing.T) {
 	}
 }
 
-// Test to ensure that definitions are not equal between two namespaces.
-// Test to ensure internal registry only contains namespaces defined in init
+// TestEventNamespacesIdentitiesAreDistinct verifies that namespace definitions
+// retain distinct identities even when they use the same enum value type.
 func TestEventNamespacesIdentitiesAreDistinct(t *testing.T) {
 	registry.DeleteDefinition(reflect.TypeFor[windowEvents]())
 	windowEvent = DefineNamespace[event](windowEvent)

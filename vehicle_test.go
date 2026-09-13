@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-// Declares type vehicle as an enum
+// vehicle is an enhanced enum carrying transport metadata.
 type vehicle struct {
 	Member[vehicle]
 
@@ -20,19 +20,21 @@ type vehicle struct {
 	CarbonPerKilometer int
 }
 
-// Ensures event type satisfies Enum interface
+// Compile-time interface checks for vehicle's enum and database integrations.
 var (
 	_ Enum[vehicle]          = vehicle{}
 	_ encoding.TextMarshaler = vehicle{}
 	_ driver.Valuer          = (*vehicle)(nil)
 )
 
+// vehicles is the namespace used by the enhanced enum tests.
 type vehicles struct {
 	Car     vehicle
 	Bus     vehicle
 	Bicycle vehicle
 }
 
+// transportation is the enhanced enum namespace schema.
 var transportation = vehicles{
 	Car: vehicle{
 		Tires:              4,
@@ -51,6 +53,7 @@ var transportation = vehicles{
 	},
 }
 
+// TestEnhancedEnumVehicleTires verifies the Tires field survives initialization.
 func TestEnhancedEnumVehicleTires(t *testing.T) {
 	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
 	Vehicle := DefineNamespace[vehicle](transportation)
@@ -78,6 +81,7 @@ func TestEnhancedEnumVehicleTires(t *testing.T) {
 	}
 }
 
+// TestEnhancedEnumVehiclePassengers verifies the Passengers field survives initialization.
 func TestEnhancedEnumVehiclePassengers(t *testing.T) {
 	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
 	Vehicle := DefineNamespace[vehicle](transportation)
@@ -105,6 +109,7 @@ func TestEnhancedEnumVehiclePassengers(t *testing.T) {
 	}
 }
 
+// TestEnhancedEnumVehicleCarbonPerKilometer verifies the CarbonPerKilometer field survives initialization.
 func TestEnhancedEnumVehicleCarbonPerKilometer(t *testing.T) {
 	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
 	Vehicle := DefineNamespace[vehicle](transportation)

@@ -112,6 +112,7 @@ func (def *Definition[T]) Entries() iter.Seq2[string, T] {
 	}
 }
 
+// Metadata returns a defensive copy of the definition metadata.
 func (def *Definition[T]) Metadata() []Metadata {
 	if def == nil {
 		return []Metadata{}

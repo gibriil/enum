@@ -13,6 +13,7 @@ import (
 	"github.com/gibriil/enum"
 )
 
+// role is an enhanced enum carrying scopes and resource permissions.
 type role struct {
 	enum.Member[role]
 
@@ -23,14 +24,14 @@ type role struct {
 	Permissions map[string]string
 }
 
-// Ensures role type satisfies Enum interface
+// Compile-time interface checks for role's enum and database integrations.
 var (
 	_ enum.Enum[role]        = role{}
 	_ encoding.TextMarshaler = role{}
 	_ driver.Valuer          = (*role)(nil)
 )
 
-// AccessControl groups role assignments
+// accessControl groups role assignments in declaration order.
 type accessControl struct {
 	User    role
 	Guest   role
@@ -39,6 +40,7 @@ type accessControl struct {
 	Viewer  role
 }
 
+// testAccessControl is the enhanced role namespace used by the collection tests.
 var testAccessControl = accessControl{
 	// Admin: full access
 	Admin: role{
@@ -91,10 +93,12 @@ var testAccessControl = accessControl{
 	},
 }
 
+// init registers the role namespace before the tests run.
 func init() {
 	testAccessControl = enum.DefineNamespace[role](testAccessControl)
 }
 
+// TestCollectionEquality verifies identity-based equality for enhanced enums.
 func TestCollectionEquality(t *testing.T) {
 	if enum.Equal(testAccessControl.Admin, testAccessControl.Guest) {
 		t.Errorf("accessControl.Admin should not equal accessControl.Guest")
@@ -105,6 +109,7 @@ func TestCollectionEquality(t *testing.T) {
 	}
 }
 
+// TestCollectionsByName verifies exact, case-sensitive name lookups.
 func TestCollectionsByName(t *testing.T) {
 	namespace := enum.DefinitionFor[role, accessControl]()
 	tests := []struct {
@@ -152,6 +157,7 @@ func TestCollectionsByName(t *testing.T) {
 	}
 }
 
+// TestCollectionsByIndex verifies ordered lookups and invalid indexes.
 func TestCollectionsByIndex(t *testing.T) {
 	namespace := enum.DefinitionFor[role, accessControl]()
 
@@ -188,6 +194,7 @@ func TestCollectionsByIndex(t *testing.T) {
 	}
 }
 
+// TestCollectionsValues verifies that Values returns members in declaration order.
 func TestCollectionsValues(t *testing.T) {
 	namespace := enum.DefinitionFor[role, accessControl]()
 
@@ -219,6 +226,7 @@ func TestCollectionsValues(t *testing.T) {
 	}
 }
 
+// TestCollectionsNames verifies that Names returns names in declaration order.
 func TestCollectionsNames(t *testing.T) {
 	namespace := enum.DefinitionFor[role, accessControl]()
 
@@ -251,6 +259,7 @@ func TestCollectionsNames(t *testing.T) {
 
 }
 
+// TestCollectionsAll verifies iteration over all members.
 func TestCollectionsAll(t *testing.T) {
 	namespace := enum.DefinitionFor[role, accessControl]()
 
@@ -275,6 +284,7 @@ func TestCollectionsAll(t *testing.T) {
 	}
 }
 
+// TestCollectionsEntries verifies iteration over names and corresponding members.
 func TestCollectionsEntries(t *testing.T) {
 	namespace := enum.DefinitionFor[role, accessControl]()
 

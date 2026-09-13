@@ -15,6 +15,7 @@ import (
 //
 // The zero value of Member is a nil definition signifying the enum is not initialized
 type Member[T any] struct {
+	// Entry stores the member identity and associated enum value.
 	internal.Entry[T]
 }
 
@@ -56,7 +57,8 @@ func (e Member[T]) Type() reflect.Type {
 	return e.Definition().EntryType()
 }
 
-// Raw returns the enums MemberAs raw value
+// Raw returns the underlying value stored in a type-backed enum member. It
+// returns the zero value of T for an uninitialized member.
 func (e Member[T]) Raw() T {
 	if !e.Valid() {
 		return *new(T)

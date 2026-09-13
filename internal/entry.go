@@ -16,6 +16,7 @@ var (
 	ErrInvalidEnumType = errors.New("entry is not expected type")
 )
 
+// Entry stores a member's identity and its associated value.
 type Entry[T any] struct {
 	entryIdentity[T]
 	value any
@@ -27,11 +28,15 @@ type entryIdentity[T any] struct {
 	index int
 }
 
-// Metadata holds the reflection information for an enum
+// Metadata holds the reflection information for an enum.
 type Metadata struct {
+	// Name is the registered member name.
 	Name  string
+	// Field describes the corresponding namespace field.
 	Field reflect.StructField
+	// Type is the type of the corresponding namespace field.
 	Type  reflect.Type
+	// Value is the reflected value associated with the member.
 	Value reflect.Value
 }
 
@@ -66,7 +71,7 @@ func (e Entry[T]) Index() int {
 	return e.index
 }
 
-// Value returns the concrete value of the entry's type
+// Value returns the concrete value associated with the entry.
 func (e Entry[T]) Value() T {
 	return e.value.(T)
 }
