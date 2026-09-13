@@ -36,7 +36,17 @@ func (def *Namespace[T]) UnmarshalText(enum *T, text []byte) error {
 
 // Scan is a helper for creating Scan on Enum type
 func (def *Namespace[T]) Scan(enum *T, src any) error {
-	if def == nil || src == nil {
+	if enum == nil {
+		return ErrUninitialized
+	}
+
+	if def == nil {
+		*enum = *new(T)
+		return ErrNotDefined
+	}
+
+	if src == nil {
+		*enum = *new(T)
 		return nil
 	}
 

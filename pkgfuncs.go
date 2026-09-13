@@ -252,11 +252,15 @@ func Entries[T any](namespace Namespace[T]) iter.Seq2[string, T] {
 }
 
 func Decode[T Enum[T]](namespace Namespace[T], enum *T, src any) error {
+	if enum == nil {
+		return ErrUninitialized
+	}
 	if namespace.EntryType() != reflect.TypeFor[T]() {
 		return ErrInvalidEnumType
 	}
 
 	if src == nil {
+		*enum = *new(T)
 		return nil
 	}
 
