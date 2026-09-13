@@ -66,6 +66,10 @@ func DefineNamespace[T any, S any](schema S) S {
 		entryIndex++
 	}
 
+	if len(entries) == 0 {
+		panic(fmt.Sprintf("attempted to register %v enums with 0 members", class))
+	}
+
 	internal.PopulateDefinition(&def, entries...)
 	internal.AttachMetadata(&def, metadata...)
 
@@ -91,9 +95,7 @@ func DefineType[T comparable](members ...As[T]) Namespace[T] {
 	fields := []reflect.StructField{}
 
 	for index, entry := range members {
-		enum := reflect.ValueOf(Member[T]{})
-
-		embedded := enum.FieldByName("Entry").Interface().(internal.Entry[T])
+		embedded := reflect.ValueOf(Member[T]{}).FieldByName("Entry").Interface().(internal.Entry[T])
 
 		internal.InitializeEntry(&embedded, entry.Name, &def, index)
 
@@ -102,24 +104,22 @@ func DefineType[T comparable](members ...As[T]) Namespace[T] {
 			panic(fmt.Sprintf("invalid entry name at position %d", index))
 		}
 
+		internal.InitializeEntryValue(&embedded, entry.Value)
+
 		field := reflect.StructField{
 			Name: string(unicode.ToUpper(firstLetter)) + entry.Name[size:],
 			Type: class,
 		}
 
-		internal.InitializeEntryValue(&embedded, entry.Value)
-
 		fields = append(fields, field)
 		entries = append(entries, embedded)
 		metadata = append(metadata, internal.Metadata{
-			Name:  field.Name,
+			Name:  entry.Name,
 			Field: field,
 			Type:  field.Type,
-			Value: enum,
+			Value: reflect.ValueOf(entry.Value),
 		})
 	}
-
-	// schema = reflect.New(reflect.StructOf(fields)).Interface()
 
 	internal.PopulateDefinition(&def, entries...)
 	internal.AttachMetadata(&def, metadata...)
