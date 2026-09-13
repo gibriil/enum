@@ -13,8 +13,9 @@ import (
 	"github.com/gibriil/enum"
 )
 
+// role is an enhanced enum carrying scopes and resource permissions.
 type role struct {
-	enum.Member
+	enum.Member[role]
 
 	// Scope defines the allowed resources or endpoints.
 	Scope []string
@@ -23,21 +24,24 @@ type role struct {
 	Permissions map[string]string
 }
 
-// Ensures role type satisfies Enum interface
+// Compile-time interface checks for role's enum and database integrations.
 var (
-	_ enum.Enum              = role{}
+	_ enum.Enum[role]        = role{}
 	_ encoding.TextMarshaler = role{}
 	_ driver.Valuer          = (*role)(nil)
 )
 
-// AccessControl groups role assignments
-var accessControl = struct {
+// accessControl groups role assignments in declaration order.
+type accessControl struct {
 	User    role
 	Guest   role
 	Admin   role
 	Manager role
 	Viewer  role
-}{
+}
+
+// testAccessControl is the enhanced role namespace used by the collection tests.
+var testAccessControl = accessControl{
 	// Admin: full access
 	Admin: role{
 		Scope: []string{"read", "write", "delete", "admin"},
@@ -89,33 +93,36 @@ var accessControl = struct {
 	},
 }
 
+// init registers the role namespace before the tests run.
 func init() {
-	accessControl = enum.Define(accessControl)
+	testAccessControl = enum.DefineNamespace[role](testAccessControl)
 }
 
+// TestCollectionEquality verifies identity-based equality for enhanced enums.
 func TestCollectionEquality(t *testing.T) {
-
-	if enum.Equal(accessControl.Admin, accessControl.Guest) {
+	if enum.Equal(testAccessControl.Admin, testAccessControl.Guest) {
 		t.Errorf("accessControl.Admin should not equal accessControl.Guest")
 	}
 
-	if !enum.Equal(accessControl.Admin, accessControl.Admin) {
+	if !enum.Equal(testAccessControl.Admin, testAccessControl.Admin) {
 		t.Errorf("accessControl.Admin should be equal to itself")
 	}
 }
 
+// TestCollectionsByName verifies exact, case-sensitive name lookups.
 func TestCollectionsByName(t *testing.T) {
+	namespace := enum.DefinitionFor[role, accessControl]()
 	tests := []struct {
 		Name   string
 		Lookup string
 		Want   role
 		wantOk bool
 	}{
-		{"User", "User", accessControl.User, true},
-		{"Guest", "Guest", accessControl.Guest, true},
-		{"Admin", "Admin", accessControl.Admin, true},
-		{"Manager", "Manager", accessControl.Manager, true},
-		{"Viewer", "Viewer", accessControl.Viewer, true},
+		{"User", "User", testAccessControl.User, true},
+		{"Guest", "Guest", testAccessControl.Guest, true},
+		{"Admin", "Admin", testAccessControl.Admin, true},
+		{"Manager", "Manager", testAccessControl.Manager, true},
+		{"Viewer", "Viewer", testAccessControl.Viewer, true},
 		{"Missing", "Reporter", role{}, false},
 	}
 
@@ -132,7 +139,7 @@ func TestCollectionsByName(t *testing.T) {
 		}
 		for _, v := range variations {
 			t.Run(test.Name+"/"+v.Name, func(t *testing.T) {
-				got, ok := enum.ByName(accessControl, v.Lookup)
+				got, ok := enum.ByName(namespace, v.Lookup)
 				if ok != v.wantOk {
 					t.Fatalf("ByName(%q): ok=%v, want %v", v.Lookup, ok, v.wantOk)
 				}
@@ -150,24 +157,27 @@ func TestCollectionsByName(t *testing.T) {
 	}
 }
 
+// TestCollectionsByIndex verifies ordered lookups and invalid indexes.
 func TestCollectionsByIndex(t *testing.T) {
+	namespace := enum.DefinitionFor[role, accessControl]()
+
 	tests := []struct {
 		Name   string
 		Index  int
 		Want   role
 		wantOk bool
 	}{
-		{"User", 0, accessControl.User, true},
-		{"Guest", 1, accessControl.Guest, true},
-		{"Admin", 2, accessControl.Admin, true},
-		{"Manager", 3, accessControl.Manager, true},
-		{"Viewer", 4, accessControl.Viewer, true},
-		{"TooHigh", len(enum.Values(accessControl)), role{}, false},
+		{"User", 0, testAccessControl.User, true},
+		{"Guest", 1, testAccessControl.Guest, true},
+		{"Admin", 2, testAccessControl.Admin, true},
+		{"Manager", 3, testAccessControl.Manager, true},
+		{"Viewer", 4, testAccessControl.Viewer, true},
+		{"TooHigh", len(enum.Values(namespace)), role{}, false},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			got, ok := enum.ByIndex(accessControl, test.Index)
+			got, ok := enum.ByIndex(namespace, test.Index)
 			if ok != test.wantOk {
 				t.Fatalf("ByIndex(%d): ok=%v, want %v", test.Index, ok, test.wantOk)
 			}
@@ -178,26 +188,29 @@ func TestCollectionsByIndex(t *testing.T) {
 				t.Errorf("ByIndex(%d): got %v, want %v", test.Index, got, test.Want)
 			}
 			if got.Index() != test.Index {
-				t.Errorf("Index() = %q, want %d", got.Name(), test.Index)
+				t.Errorf("Index() = %d, want %d", got.Index(), test.Index)
 			}
 		})
 	}
 }
 
+// TestCollectionsValues verifies that Values returns members in declaration order.
 func TestCollectionsValues(t *testing.T) {
+	namespace := enum.DefinitionFor[role, accessControl]()
+
 	tests := []struct {
 		Name   string
 		Want   role
 		wantOk bool
 	}{
-		{"User", accessControl.User, true},
-		{"Guest", accessControl.Guest, true},
-		{"Admin", accessControl.Admin, true},
-		{"Manager", accessControl.Manager, true},
-		{"Viewer", accessControl.Viewer, true},
+		{"User", testAccessControl.User, true},
+		{"Guest", testAccessControl.Guest, true},
+		{"Admin", testAccessControl.Admin, true},
+		{"Manager", testAccessControl.Manager, true},
+		{"Viewer", testAccessControl.Viewer, true},
 	}
 
-	members := enum.Values(accessControl)
+	members := enum.Values(namespace)
 
 	if len(members) != len(tests) {
 		t.Fatalf("unexpected Values length: got %d, want %d", len(tests), len(members))
@@ -213,20 +226,23 @@ func TestCollectionsValues(t *testing.T) {
 	}
 }
 
+// TestCollectionsNames verifies that Names returns names in declaration order.
 func TestCollectionsNames(t *testing.T) {
+	namespace := enum.DefinitionFor[role, accessControl]()
+
 	tests := []struct {
 		Name   string
 		Want   role
 		wantOk bool
 	}{
-		{"User", accessControl.User, true},
-		{"Guest", accessControl.Guest, true},
-		{"Admin", accessControl.Admin, true},
-		{"Manager", accessControl.Manager, true},
-		{"Viewer", accessControl.Viewer, true},
+		{"User", testAccessControl.User, true},
+		{"Guest", testAccessControl.Guest, true},
+		{"Admin", testAccessControl.Admin, true},
+		{"Manager", testAccessControl.Manager, true},
+		{"Viewer", testAccessControl.Viewer, true},
 	}
 
-	members := enum.Names(accessControl)
+	members := enum.Names(namespace)
 
 	if len(members) != len(tests) {
 		t.Fatalf("unexpected Names length: got %d, want %d", len(tests), len(members))
@@ -243,20 +259,23 @@ func TestCollectionsNames(t *testing.T) {
 
 }
 
+// TestCollectionsAll verifies iteration over all members.
 func TestCollectionsAll(t *testing.T) {
+	namespace := enum.DefinitionFor[role, accessControl]()
+
 	tests := []struct {
 		Name   string
 		Want   role
 		wantOk bool
 	}{
-		{"User", accessControl.User, true},
-		{"Guest", accessControl.Guest, true},
-		{"Admin", accessControl.Admin, true},
-		{"Manager", accessControl.Manager, true},
-		{"Viewer", accessControl.Viewer, true},
+		{"User", testAccessControl.User, true},
+		{"Guest", testAccessControl.Guest, true},
+		{"Admin", testAccessControl.Admin, true},
+		{"Manager", testAccessControl.Manager, true},
+		{"Viewer", testAccessControl.Viewer, true},
 	}
 
-	for e := range enum.All(accessControl) {
+	for e := range enum.All(namespace) {
 		t.Run(e.Name(), func(t *testing.T) {
 			if !enum.Equal(e, tests[e.Index()].Want) {
 				t.Errorf("iteration did not yield expected enum: got %s, want %s", e, tests[e.Index()].Want)
@@ -265,20 +284,23 @@ func TestCollectionsAll(t *testing.T) {
 	}
 }
 
+// TestCollectionsEntries verifies iteration over names and corresponding members.
 func TestCollectionsEntries(t *testing.T) {
+	namespace := enum.DefinitionFor[role, accessControl]()
+
 	tests := []struct {
 		Name   string
 		Want   role
 		wantOk bool
 	}{
-		{"User", accessControl.User, true},
-		{"Guest", accessControl.Guest, true},
-		{"Admin", accessControl.Admin, true},
-		{"Manager", accessControl.Manager, true},
-		{"Viewer", accessControl.Viewer, true},
+		{"User", testAccessControl.User, true},
+		{"Guest", testAccessControl.Guest, true},
+		{"Admin", testAccessControl.Admin, true},
+		{"Manager", testAccessControl.Manager, true},
+		{"Viewer", testAccessControl.Viewer, true},
 	}
 
-	for name, e := range enum.Entries(accessControl) {
+	for name, e := range enum.Entries(namespace) {
 		t.Run(name, func(t *testing.T) {
 			if !enum.Equal(e, tests[e.Index()].Want) {
 				t.Errorf("iteration did not yield expected enum: got %s, want %s", e, tests[e.Index()].Want)

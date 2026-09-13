@@ -2,75 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/*
-Package enum provides a standard enum interface for creating a list of enums. Enums are indexed, iterable, and namespaced.
-
-Flags or flag based enums are still best handled by [Iota]
-
-# Basic Enum
-
-Declare an Enum type by embedding Member in a struct.
-
-	type Color struct {
-		enum.Member
-	}
-
-This enum type can now be used to create an Enum list or namespace.
-
-	type Colors struct {
-		Red Color
-		Green Color
-		Blue Color
-	}
-
-The enums can now be initialized by passing your struct to the Define function.
-
-	Colors := enum.Define(Colors{})
-
-# Enhanced Enum
-
-Because an enum is just a struct, we can build enhanced enums that carry additional data.
-
-	type Vehicle struct {
-		enum.Member
-
-		Tires int
-		Passengers int
-		CarbonPerKilometer int
-	}
-
-These are identical to our basic enum in every other way.
-
-Create an Enum list or namespace.
-
-	type Vehicles struct {
-		Car Vehicle
-		Bus Vehicle
-		Bicycle Vehicle
-	}
-
-The additional data can then be populated with their non-zero values when passing the struct declaration to Define.
-
-	Vehicle := enum.Define(Vehicles{
-		Car: Vehicle{
-			Tires: 4,
-			Passengers: 5,
-			CarbonPerKilometer: 400,
-		},
-		Bus: Vehicle{
-			Tires: 6,
-			Passengers: 50,
-			CarbonPerKilometer: 800,
-		},
-		Bicycle: Vehicle{
-			Tires: 2,
-			Passengers: 1,
-			CarbonPerKilometer: 0,
-		},
-	})
-
-Because package enum uses reflection to initialize, it may be advisable to declare your list globally and pass it to Define in the init function
-*/
 package enum
 
 import (
@@ -79,32 +10,32 @@ import (
 )
 
 var (
+	// ErrUninitialized reports that an enum or member has its zero value.
 	ErrUninitialized   = errors.New("enum is Zero Value")
+	// ErrNotDefined reports that a requested enum definition is not registered.
 	ErrNotDefined      = errors.New("enum has no registered definition")
+	// ErrEnumNotFound reports that a name or index does not identify a member.
 	ErrEnumNotFound    = errors.New("enum not found")
+	// ErrInvalidEnumType reports that a registered definition has the wrong type.
 	ErrInvalidEnumType = errors.New("enum is not expected type")
 )
 
 // Enum is a package sealed interface to identify the enum type
-type Enum interface {
+type Enum[T any] interface {
 	enum()
-	identity() Member
 
 	fmt.Stringer
 
 	Name() string
 	Index() int
 	Valid() bool
+	Namespace() Namespace[T]
 }
 
-// EnumAs is a package sealed interface to identify the enum of an underlying type
-type EnumAs[T comparable] interface {
-	Enum
-
-	Raw() T
-}
-
-// Namespace carries the internal registered definition of an Enum set
-type Namespace struct {
-	*definition
+// As associates a name with a comparable enum value for DefineType.
+type As[T comparable] struct {
+	// Name is the name used to look up the value.
+	Name  string
+	// Value is the comparable value associated with Name.
+	Value T
 }

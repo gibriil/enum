@@ -7,31 +7,34 @@ package enum
 import (
 	"database/sql/driver"
 	"encoding"
+	"reflect"
 	"testing"
 )
 
-// Declares type vehicle as an enum
+// vehicle is an enhanced enum carrying transport metadata.
 type vehicle struct {
-	Member
+	Member[vehicle]
 
 	Tires              int
 	Passengers         int
 	CarbonPerKilometer int
 }
 
-// Ensures event type satisfies Enum interface
+// Compile-time interface checks for vehicle's enum and database integrations.
 var (
-	_ Enum                   = vehicle{}
+	_ Enum[vehicle]          = vehicle{}
 	_ encoding.TextMarshaler = vehicle{}
 	_ driver.Valuer          = (*vehicle)(nil)
 )
 
+// vehicles is the namespace used by the enhanced enum tests.
 type vehicles struct {
 	Car     vehicle
 	Bus     vehicle
 	Bicycle vehicle
 }
 
+// transportation is the enhanced enum namespace schema.
 var transportation = vehicles{
 	Car: vehicle{
 		Tires:              4,
@@ -50,9 +53,10 @@ var transportation = vehicles{
 	},
 }
 
+// TestEnhancedEnumVehicleTires verifies the Tires field survives initialization.
 func TestEnhancedEnumVehicleTires(t *testing.T) {
-	clearRegisteredNamespace[vehicles]()
-	Vehicle := Define(transportation)
+	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
+	Vehicle := DefineNamespace[vehicle](transportation)
 
 	tireTests := []struct {
 		Name    string
@@ -77,9 +81,10 @@ func TestEnhancedEnumVehicleTires(t *testing.T) {
 	}
 }
 
+// TestEnhancedEnumVehiclePassengers verifies the Passengers field survives initialization.
 func TestEnhancedEnumVehiclePassengers(t *testing.T) {
-	clearRegisteredNamespace[vehicles]()
-	Vehicle := Define(transportation)
+	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
+	Vehicle := DefineNamespace[vehicle](transportation)
 
 	tireTests := []struct {
 		Name    string
@@ -104,9 +109,10 @@ func TestEnhancedEnumVehiclePassengers(t *testing.T) {
 	}
 }
 
+// TestEnhancedEnumVehicleCarbonPerKilometer verifies the CarbonPerKilometer field survives initialization.
 func TestEnhancedEnumVehicleCarbonPerKilometer(t *testing.T) {
-	clearRegisteredNamespace[vehicles]()
-	Vehicle := Define(transportation)
+	registry.DeleteDefinition(reflect.TypeFor[vehicles]())
+	Vehicle := DefineNamespace[vehicle](transportation)
 
 	tireTests := []struct {
 		Name    string
