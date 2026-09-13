@@ -1,10 +1,14 @@
-package enum
+package enum_test
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/gibriil/enum"
+)
 
 // Fruit is the enum value type used by the package example.
 type Fruit struct {
-	Member[Fruit]
+	enum.Member[Fruit]
 }
 
 // fruits is the example namespace schema.
@@ -16,9 +20,9 @@ var fruits = struct {
 }{}
 
 // Example demonstrates defining a namespace and formatting its members.
-func Example() {
+func Example_fruits() {
 
-	fruits = DefineNamespace[Fruit](fruits)
+	fruits = enum.DefineNamespace[Fruit](fruits)
 
 	fmt.Printf("I like %ss, %ss, and %s", fruits.Banana, fruits.Coconut, fruits.Grapes)
 

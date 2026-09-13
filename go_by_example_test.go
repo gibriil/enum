@@ -1,5 +1,4 @@
-// Package go_by_example_main demonstrates type-backed enum definitions.
-package go_by_example_main
+package enum_test
 
 import (
 	"fmt"
@@ -33,7 +32,7 @@ func (ss ServerState) String() string {
 }
 
 // main demonstrates transitions between server states.
-func main() {
+func Example_goByExample() {
 	ns := transition(enum.Of(StateIdle))
 	fmt.Println(ns)
 
