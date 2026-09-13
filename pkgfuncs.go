@@ -48,6 +48,8 @@ func DefineNamespace[T any, S any](schema S) S {
 
 		internal.InitializeEntry(&embedded, field.Name, &def, entryIndex)
 
+		internal.InitializeEntryValue(&embedded, member.Interface().(T))
+
 		member.FieldByName("Entry").Set(reflect.ValueOf(embedded))
 
 		entries = append(entries, embedded)
@@ -102,6 +104,8 @@ func DefineType[T comparable](members ...As[T]) (namespace Namespace[T], schema 
 			Name: string(unicode.ToUpper(firstLetter)) + entry.Name[size:],
 			Type: class,
 		}
+
+		internal.InitializeEntryValue(&embedded, entry.Value)
 
 		fields = append(fields, field)
 		entries = append(entries, embedded)
@@ -260,10 +264,16 @@ func Decode[T Enum[T]](namespace Namespace[T], enum *T, src any) error {
 
 // Of loops through definition entries and returns the Member enum that is equal to the comparable type T
 func Of[T comparable](enum T) Member[T] {
-	def, ok := registry.Lookup(reflect.TypeFor[T]()).(*internal.Definition[T])
+	registration := registry.Lookup(reflect.TypeFor[T]())
+
+	if registration == nil {
+		panic(ErrNotDefined)
+	}
+
+	def, ok := registration.(*internal.Definition[T])
 
 	if !ok {
-		panic(ErrNotDefined)
+		panic(ErrInvalidEnumType)
 	}
 
 	for name, v := range def.Entries() {

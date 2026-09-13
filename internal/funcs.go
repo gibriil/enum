@@ -74,6 +74,10 @@ func InitializeEntry[T any](e *Entry[T], name string, def *Definition[T], index 
 	}
 }
 
+func InitializeEntryValue[T any](e *Entry[T], value T) {
+	e.value = value
+}
+
 func IdentityOf[T any](entry Entry[T]) entryIdentity[T] {
 	return entry.entryIdentity
 }

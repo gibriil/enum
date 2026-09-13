@@ -76,9 +76,5 @@ func (e Entry[T]) Definition() *Definition[T] {
 	if !e.Valid() {
 		return &Definition[T]{}
 	}
-	return e.Definition()
-}
-
-type initializer[T any] interface {
-	Value() T
+	return e.def
 }

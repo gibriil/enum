@@ -57,7 +57,7 @@ func (e Member[T]) Value() (driver.Value, error) {
 	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
-	return e.Entry.Value(), nil
+	return e.Entry.Name(), nil
 }
 
 // enum marks Member as a valid enum implementation.
