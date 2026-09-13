@@ -15,7 +15,7 @@ const (
 	StateRetrying
 )
 
-var ServerStates, schema = enum.DefineType(
+var ServerStates = enum.DefineType(
 	enum.As[ServerState]{Name: "idle", Value: StateIdle},
 	enum.As[ServerState]{Name: "connected", Value: StateConnected},
 	enum.As[ServerState]{Name: "error", Value: StateError},

@@ -20,7 +20,7 @@ const (
 )
 
 func init() {
-	_, _ = enum.DefineType(
+	_ = enum.DefineType(
 		enum.As[serverState]{Name: "idle", Value: stateIdle},
 		enum.As[serverState]{Name: "connected", Value: stateConnected},
 		enum.As[serverState]{Name: "error", Value: stateError},
@@ -69,7 +69,7 @@ func TestMemberAs(t *testing.T) {
 		stopped
 	)
 
-	states, _ := enum.DefineType(
+	states := enum.DefineType(
 		enum.As[state]{Name: "idle", Value: idle},
 		enum.As[state]{Name: "running", Value: running},
 		enum.As[state]{Name: "stopped", Value: stopped},

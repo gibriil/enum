@@ -26,32 +26,6 @@ func (e Member[T]) MarshalText() ([]byte, error) {
 	return []byte(e.Name()), nil
 }
 
-// UnmarshalText un-marshals the data to an Enum
-func (e *Member[T]) UnmarshalText(text []byte) error {
-	def := registry.Lookup(reflect.TypeFor[T]())
-
-	if def == nil {
-		panic(ErrNotDefined)
-	}
-
-	namespace, ok := def.(internal.Definition[T])
-
-	if !ok {
-		return ErrInvalidEnumType
-	}
-
-	entry, ok := internal.Lookup(&namespace, string(text))
-
-	if !ok {
-		return ErrEnumNotFound
-	}
-
-	*e = Member[T]{
-		Entry: entry,
-	}
-	return nil
-}
-
 // Value allows the driver to handle the name of the enum member
 func (e Member[T]) Value() (driver.Value, error) {
 	if !e.Valid() {
@@ -84,5 +58,8 @@ func (e Member[T]) Type() reflect.Type {
 
 // Raw returns the enums MemberAs raw value
 func (e Member[T]) Raw() T {
+	if !e.Valid() {
+		return *new(T)
+	}
 	return e.Entry.Value()
 }

@@ -75,7 +75,7 @@ func DefineNamespace[T any, S any](schema S) S {
 }
 
 // DefineType registers a comparable type into a Namespace and initializes each enum member
-func DefineType[T comparable](members ...As[T]) (namespace Namespace[T], schema any) {
+func DefineType[T comparable](members ...As[T]) Namespace[T] {
 
 	class := reflect.TypeFor[T]()
 
@@ -119,17 +119,16 @@ func DefineType[T comparable](members ...As[T]) (namespace Namespace[T], schema 
 		})
 	}
 
-	schema = reflect.New(reflect.StructOf(fields)).Interface()
+	// schema = reflect.New(reflect.StructOf(fields)).Interface()
 
 	internal.PopulateDefinition(&def, entries...)
 	internal.AttachMetadata(&def, metadata...)
 
 	internal.RegisterDefinition(registry, &def)
 
-	namespace = Namespace[T]{
+	return Namespace[T]{
 		Definition: &def,
 	}
-	return
 }
 
 // DefinitionFor returns the registered definition for an enum type
