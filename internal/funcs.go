@@ -31,12 +31,15 @@ func PopulateDefinition[T any](def *Definition[T], entries ...Entry[T]) {
 	def.lookup = make(map[string]int, def.length)
 	def.metadata = make([]Metadata, def.length)
 
-	for _, entry := range entries {
+	for i, entry := range entries {
 		if slices.Contains(def.names, entry.name) {
 			panic(fmt.Sprintf("%v already has entry for %s", def.identity, entry.name))
 		}
-	}
 
+		def.values[i] = entry
+		def.names[i] = entry.name
+		def.lookup[entry.name] = i
+	}
 }
 
 func AttachMetadata[T any](def *Definition[T], data ...Metadata) {
@@ -63,11 +66,12 @@ func Lookup[T any](def *Definition[T], name string) (Entry[T], bool) {
 	return def.values[index], ok
 }
 
-func SetEntry[T any](e *Entry[T], name string, value T) {
+func InitializeEntry[T any](e *Entry[T], name string, def *Definition[T], index int) {
 	e.entryIdentity = entryIdentity[T]{
-		name: name,
+		name:  name,
+		def:   def,
+		index: index,
 	}
-	e.value = value
 }
 
 func IdentityOf[T any](entry Entry[T]) entryIdentity[T] {

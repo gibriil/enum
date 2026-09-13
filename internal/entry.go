@@ -40,11 +40,6 @@ func (e Entry[T]) Valid() bool {
 	return e.def != nil
 }
 
-// identity returns the comparable for Entry equality checks
-func (e Entry[T]) identity() entryIdentity[T] {
-	return e.entryIdentity
-}
-
 // Name returns the entry's name
 func (e Entry[T]) Name() string {
 	if !e.Valid() {
@@ -82,4 +77,8 @@ func (e Entry[T]) Definition() *Definition[T] {
 		return &Definition[T]{}
 	}
 	return e.Definition()
+}
+
+type initializer[T any] interface {
+	Value() T
 }

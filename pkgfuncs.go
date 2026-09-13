@@ -44,13 +44,11 @@ func DefineNamespace[T any, S any](schema S) S {
 
 		member := reflect.ValueOf(&schema).Elem().Field(i)
 
-		embedded := member.Addr().Elem().FieldByName("Entry").Interface().(internal.Entry[T])
+		embedded := member.FieldByName("Entry").Interface().(internal.Entry[T])
 
-		internal.SetEntry(
-			&embedded,
-			member.Type().Name(),
-			member.Interface().(T),
-		)
+		internal.InitializeEntry(&embedded, field.Name, &def, entryIndex)
+
+		member.FieldByName("Entry").Set(reflect.ValueOf(embedded))
 
 		entries = append(entries, embedded)
 
@@ -89,19 +87,11 @@ func DefineType[T comparable](members ...As[T]) (namespace Namespace[T], schema 
 	fields := []reflect.StructField{}
 
 	for index, entry := range members {
-		embedded := []reflect.StructField{
-			{
-				Name: "Entry",
-				Type: reflect.TypeFor[internal.Entry[T]](),
-			},
-		}
+		enum := reflect.ValueOf(Member[T]{})
 
-		enum := reflect.New(reflect.StructOf(embedded))
+		embedded := enum.FieldByName("Entry").Interface().(internal.Entry[T])
 
-		member := internal.Entry[T]{}
-		internal.SetEntry(&member, entry.Name, entry.Value)
-
-		enum.Elem().FieldByName("Entry").Set(reflect.ValueOf(member))
+		internal.InitializeEntry(&embedded, entry.Name, &def, index)
 
 		firstLetter, size := utf8.DecodeRuneInString(entry.Name)
 		if firstLetter == utf8.RuneError {
@@ -114,7 +104,7 @@ func DefineType[T comparable](members ...As[T]) (namespace Namespace[T], schema 
 		}
 
 		fields = append(fields, field)
-		entries = append(entries, member)
+		entries = append(entries, embedded)
 		metadata = append(metadata, internal.Metadata{
 			Name:  field.Name,
 			Field: field,
