@@ -4,7 +4,11 @@
 
 package bitflag
 
-import "github.com/gibriil/enum/internal"
+import (
+	"fmt"
+
+	"github.com/gibriil/enum/internal"
+)
 
 type Option[T any] struct {
 	internal.Entry[T]
@@ -15,6 +19,17 @@ type Option[T any] struct {
 // It intentionally has no behavior; it seals the Flag interface.
 func (f Option[T]) flag() {}
 
-type Flag interface {
+type Flag[T any] interface {
 	flag()
+
+	fmt.Stringer
+
+	Name() string
+	Index() int
+	Valid() bool
+	OptionSet() Store[T]
+}
+
+func (f Option[T]) OptionSet() Set[T] {
+	if
 }
