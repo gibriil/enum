@@ -5,6 +5,7 @@
 package enum_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/gibriil/enum"
@@ -42,6 +43,57 @@ func TestConstHasEnum(t *testing.T) {
 	_ = enum.DefinitionFor[serverState, serverState]()
 }
 
+// TestNamespaceFacade verifies that the namespace forwards its public
+// collection operations without exposing the internal definition type.
+func TestNamespaceFacade(t *testing.T) {
+	namespace := enum.DefinitionFor[serverState, serverState]()
+
+	if namespace.Len() != 4 {
+		t.Fatalf("Len() = %d, want 4", namespace.Len())
+	}
+	if got, ok := namespace.ByName("error"); !ok || got != stateError {
+		t.Fatalf("ByName(error) = %v, %v; want %v, true", got, ok, stateError)
+	}
+	if got, ok := namespace.ByIndex(1); !ok || got != stateConnected {
+		t.Fatalf("ByIndex(1) = %v, %v; want %v, true", got, ok, stateConnected)
+	}
+	if got := namespace.Values(); len(got) != 4 || got[0] != stateIdle {
+		t.Fatalf("Values() = %v, want four values beginning with %v", got, stateIdle)
+	}
+	if got := namespace.Names(); len(got) != 4 || got[2] != "error" {
+		t.Fatalf("Names() = %v, want four names with error at index 2", got)
+	}
+
+	all := 0
+	for range namespace.All() {
+		all++
+	}
+	if all != namespace.Len() {
+		t.Fatalf("All() yielded %d values, want %d", all, namespace.Len())
+	}
+
+	entries := 0
+	for name, value := range namespace.Entries() {
+		if entries == 0 && (name != "idle" || value != stateIdle) {
+			t.Fatalf("Entries() first result = %q, %v; want idle, %v", name, value, stateIdle)
+		}
+		entries++
+	}
+	if entries != namespace.Len() {
+		t.Fatalf("Entries() yielded %d values, want %d", entries, namespace.Len())
+	}
+
+	if namespace.EntryType() != reflect.TypeFor[serverState]() {
+		t.Fatalf("EntryType() = %v, want %v", namespace.EntryType(), reflect.TypeFor[serverState]())
+	}
+	if namespace.Type() != reflect.TypeFor[serverState]() {
+		t.Fatalf("Type() = %v, want %v", namespace.Type(), reflect.TypeFor[serverState]())
+	}
+	if namespace.Name() != "serverState" {
+		t.Fatalf("Name() = %q, want serverState", namespace.Name())
+	}
+}
+
 // TestEnumEqualsConst verifies lookup of registered underlying values.
 func TestEnumEqualsConst(t *testing.T) {
 	defer func() {
@@ -50,17 +102,17 @@ func TestEnumEqualsConst(t *testing.T) {
 		}
 	}()
 
-	if e := enum.Of(stateIdle); e.Entry.Value() != stateIdle {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateIdle)
+	if e := enum.Of(stateIdle); e.Raw() != stateIdle {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateIdle)
 	}
-	if e := enum.Of(stateConnected); e.Entry.Value() != stateConnected {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateConnected)
+	if e := enum.Of(stateConnected); e.Raw() != stateConnected {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateConnected)
 	}
-	if e := enum.Of(stateError); e.Entry.Value() != stateError {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateError)
+	if e := enum.Of(stateError); e.Raw() != stateError {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateError)
 	}
-	if e := enum.Of(stateRetrying); e.Entry.Value() != stateRetrying {
-		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Entry.Value(), stateRetrying)
+	if e := enum.Of(stateRetrying); e.Raw() != stateRetrying {
+		t.Errorf("Enum %s: got %d, want %d", e.Name(), e.Raw(), stateRetrying)
 	}
 
 }
@@ -87,8 +139,8 @@ func TestMemberAs(t *testing.T) {
 		t.Fatal("Of(running) returned invalid enum")
 	}
 
-	if got.Entry.Value() != running {
-		t.Fatalf("Value() = %v, want %v", got.Entry.Value(), running)
+	if got.Raw() != running {
+		t.Fatalf("Value() = %v, want %v", got.Raw(), running)
 	}
 
 	if got.Name() != "running" {

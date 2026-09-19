@@ -7,16 +7,14 @@ package enum
 import (
 	"database/sql/driver"
 	"reflect"
-
-	"github.com/gibriil/enum/internal"
 )
 
 // Member is embedded in a struct to mark the struct type as an enum or is the internally created member for an Enum with an underlying type
 //
 // The zero value of Member is a nil definition signifying the enum is not initialized
 type Member[T any] struct {
-	// Entry stores the member identity and associated enum value.
-	internal.Entry[T]
+	// member stores the member identity and associated enum value.
+	member[T]
 }
 
 // MarshalText marshals the enum member name
@@ -32,7 +30,7 @@ func (e Member[T]) Value() (driver.Value, error) {
 	if !e.Valid() {
 		return nil, ErrUninitialized
 	}
-	return e.Entry.Name(), nil
+	return e.member.m.Name(), nil
 }
 
 // enum marks Member as a valid enum implementation.
@@ -45,7 +43,7 @@ func (e Member[T]) Namespace() Namespace[T] {
 		return Namespace[T]{}
 	}
 	return Namespace[T]{
-		Definition: e.Definition(),
+		namespace: namespace[T]{ns: e.member.m.Definition()},
 	}
 }
 
@@ -54,7 +52,7 @@ func (e Member[T]) Type() reflect.Type {
 	if !e.Valid() {
 		return nil
 	}
-	return e.Definition().EntryType()
+	return e.member.m.Definition().EntryType()
 }
 
 // Raw returns the underlying value stored in a type-backed enum member. It
@@ -63,5 +61,5 @@ func (e Member[T]) Raw() T {
 	if !e.Valid() {
 		return *new(T)
 	}
-	return e.Entry.Value()
+	return e.member.m.Value()
 }

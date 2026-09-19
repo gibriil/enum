@@ -13,12 +13,11 @@ var registry = internal.NewRegistry()
 
 // Namespace describes the registered members of an enum definition.
 type Namespace[T any] struct {
-	// Definition contains the registered members and lookup indexes.
-	*internal.Definition[T]
+	namespace[T]
 }
 
 func (def Namespace[T]) identity() *internal.Definition[T] {
-	return def.Definition
+	return def.namespace.ns
 }
 
 // UnmarshalText looks up text in this namespace and stores the matching enum

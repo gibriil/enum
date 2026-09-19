@@ -43,16 +43,15 @@ func DefineNamespace[T any, S any](schema S) S {
 		}
 
 		member := reflect.ValueOf(&schema).Elem().Field(i)
+		carrier := member.Addr().Interface().(memberCarrier[T])
 
-		embedded := member.FieldByName("Entry").Interface().(internal.Entry[T])
+		embedded := carrier.enumEntry()
 
 		internal.InitializeEntry(&embedded, field.Name, &def, entryIndex)
-
-		member.FieldByName("Entry").Set(reflect.ValueOf(embedded))
+		carrier.setEnumEntry(embedded)
 
 		internal.InitializeEntryValue(&embedded, member.Interface().(T))
-
-		member.FieldByName("Entry").Set(reflect.ValueOf(embedded))
+		carrier.setEnumEntry(embedded)
 
 		entries = append(entries, embedded)
 
@@ -95,7 +94,8 @@ func DefineType[T comparable](members ...As[T]) Namespace[T] {
 	fields := []reflect.StructField{}
 
 	for index, entry := range members {
-		embedded := reflect.ValueOf(Member[T]{}).FieldByName("Entry").Interface().(internal.Entry[T])
+		emum := Member[T]{}
+		embedded := emum.enumEntry()
 
 		internal.InitializeEntry(&embedded, entry.Name, &def, index)
 
@@ -105,6 +105,7 @@ func DefineType[T comparable](members ...As[T]) Namespace[T] {
 		}
 
 		internal.InitializeEntryValue(&embedded, entry.Value)
+		emum.setEnumEntry(embedded)
 
 		field := reflect.StructField{
 			Name: string(unicode.ToUpper(firstLetter)) + entry.Name[size:],
@@ -127,7 +128,7 @@ func DefineType[T comparable](members ...As[T]) Namespace[T] {
 	internal.RegisterDefinition(registry, &def)
 
 	return Namespace[T]{
-		Definition: &def,
+		namespace: namespace[T]{ns: &def},
 	}
 }
 
@@ -141,14 +142,14 @@ func DefinitionFor[E, S any]() Namespace[E] {
 		panic(ErrNotDefined)
 	}
 
-	namespace, ok := def.(*internal.Definition[E])
+	ns, ok := def.(*internal.Definition[E])
 
 	if !ok {
 		panic(ErrInvalidEnumType)
 	}
 
 	return Namespace[E]{
-		Definition: namespace,
+		namespace: namespace[E]{ns: ns},
 	}
 }
 
@@ -286,7 +287,9 @@ func Of[T comparable](enum T) Member[T] {
 			cnst, ok := internal.Lookup(def, name)
 			if ok {
 				return Member[T]{
-					Entry: cnst,
+					member: member[T]{
+						m: cnst,
+					},
 				}
 			}
 
