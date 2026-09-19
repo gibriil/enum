@@ -52,8 +52,8 @@ const (
 )
 
 var states = enum.DefineType(
-	enum.As[State]{Name: "idle", Value: StateIdle},
-	enum.As[State]{Name: "running", Value: StateRunning},
+	enum.Entry("idle", StateIdle),
+	enum.Entry("running", StateRunning),
 )
 ```
 

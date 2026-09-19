@@ -25,10 +25,10 @@ const (
 // init registers the package-level server-state definition.
 func init() {
 	_ = enum.DefineType(
-		enum.As[serverState]{Name: "idle", Value: stateIdle},
-		enum.As[serverState]{Name: "connected", Value: stateConnected},
-		enum.As[serverState]{Name: "error", Value: stateError},
-		enum.As[serverState]{Name: "retrying", Value: stateRetrying},
+		enum.Entry("idle", stateIdle),
+		enum.Entry("connected", stateConnected),
+		enum.Entry("error", stateError),
+		enum.Entry("retrying", stateRetrying),
 	)
 }
 
@@ -128,9 +128,9 @@ func TestMemberAs(t *testing.T) {
 	)
 
 	states := enum.DefineType(
-		enum.As[state]{Name: "idle", Value: idle},
-		enum.As[state]{Name: "running", Value: running},
-		enum.As[state]{Name: "stopped", Value: stopped},
+		enum.Entry("idle", idle),
+		enum.Entry("running", running),
+		enum.Entry("stopped", stopped),
 	)
 
 	got := enum.Of(running)

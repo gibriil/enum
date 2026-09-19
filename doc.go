@@ -69,9 +69,9 @@ DefineType registers comparable values under names and returns their namespace.
 	)
 
 	var states = enum.DefineType(
-		enum.As[State]{Name: "idle", Value: StateIdle},
-		enum.As[State]{Name: "running", Value: StateRunning},
-		enum.As[State]{Name: "stopped", Value: StateStopped},
+		enum.Entry("idle", StateIdle),
+		enum.Entry("running", StateRunning),
+		enum.Entry("stopped", StateStopped),
 	)
 
 	current := enum.Of(StateRunning)

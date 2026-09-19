@@ -32,10 +32,9 @@ type Enum[T any] interface {
 	Namespace() Namespace[T]
 }
 
-// As associates a name with a comparable enum value for DefineType.
-type As[T comparable] struct {
-	// Name is the name used to look up the value.
-	Name string
-	// Value is the comparable value associated with Name.
-	Value T
+// Entry associates a name with a comparable enum value for DefineType.
+func Entry[T comparable](name string, value T) func() (string, T) {
+	return func() (string, T) {
+		return name, value
+	}
 }

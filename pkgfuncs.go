@@ -78,7 +78,7 @@ func DefineNamespace[T any, S any](schema S) S {
 }
 
 // DefineType registers named comparable values and returns their Namespace.
-func DefineType[T comparable](members ...As[T]) Namespace[T] {
+func DefineType[T comparable](members ...func() (string, T)) Namespace[T] {
 
 	class := reflect.TypeFor[T]()
 
@@ -96,29 +96,30 @@ func DefineType[T comparable](members ...As[T]) Namespace[T] {
 	for index, entry := range members {
 		emum := Member[T]{}
 		embedded := emum.enumEntry()
+		name, value := entry()
 
-		internal.InitializeEntry(&embedded, entry.Name, &def, index)
+		internal.InitializeEntry(&embedded, name, &def, index)
 
-		firstLetter, size := utf8.DecodeRuneInString(entry.Name)
+		firstLetter, size := utf8.DecodeRuneInString(name)
 		if firstLetter == utf8.RuneError {
 			panic(fmt.Sprintf("invalid entry name at position %d", index))
 		}
 
-		internal.InitializeEntryValue(&embedded, entry.Value)
+		internal.InitializeEntryValue(&embedded, value)
 		emum.setEnumEntry(embedded)
 
 		field := reflect.StructField{
-			Name: string(unicode.ToUpper(firstLetter)) + entry.Name[size:],
+			Name: string(unicode.ToUpper(firstLetter)) + name[size:],
 			Type: class,
 		}
 
 		fields = append(fields, field)
 		entries = append(entries, embedded)
 		metadata = append(metadata, internal.Metadata{
-			Name:  entry.Name,
+			Name:  name,
 			Field: field,
 			Type:  field.Type,
-			Value: reflect.ValueOf(entry.Value),
+			Value: reflect.ValueOf(value),
 		})
 	}
 

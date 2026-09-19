@@ -19,10 +19,10 @@ const (
 
 // ServerStates is the namespace for the server-state values.
 var ServerStates = enum.DefineType(
-	enum.As[ServerState]{Name: "idle", Value: StateIdle},
-	enum.As[ServerState]{Name: "connected", Value: StateConnected},
-	enum.As[ServerState]{Name: "error", Value: StateError},
-	enum.As[ServerState]{Name: "retrying", Value: StateRetrying},
+	enum.Entry("idle", StateIdle),
+	enum.Entry("connected", StateConnected),
+	enum.Entry("error", StateError),
+	enum.Entry("retrying", StateRetrying),
 )
 
 // String returns the registered name of the server state.
